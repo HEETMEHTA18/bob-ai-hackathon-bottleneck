@@ -1,0 +1,140 @@
+{
+  "timestamp": "2026-09-13T15:26:18.176772",
+  "note": "Deployed models trained on 2024 Bhadla solar + 2024 Jaisalmer wind only.",
+  "solar": {
+    "in-distribution (last 30% of 2024, Bhadla)": {
+      "window": "8784h (in-distribution (last 30% of 2024, Bhadla))",
+      "site": "solar_generation.csv",
+      "deployed": {
+        "MAE": 0.8380254457422892,
+        "nMAE_%": 0.8380254457422891,
+        "R2": 0.9937161485373728
+      },
+      "deployed_allhours": {
+        "MAE": 0.417490066021649,
+        "nMAE_%": 0.41749006602164906,
+        "R2": 0.9973033111729994
+      },
+      "physics_only": {
+        "MAE": 4.584188034556487,
+        "nMAE_%": 4.584188034556487,
+        "R2": 0.9504965053740843
+      },
+      "persistence_24h": {
+        "MAE": 3.9684273708757654,
+        "nMAE_%": 3.968427370875766,
+        "R2": 0.8919770175073655
+      },
+      "daytime_R2_context": "solar R2 reported daytime-only (ghi>10)"
+    },
+    "cross-year (all 2023, Bhadla)": {
+      "window": "8760h (cross-year (all 2023, Bhadla))",
+      "site": "solar_2023_bhadla.csv",
+      "deployed": {
+        "MAE": 0.9481147760615258,
+        "nMAE_%": 0.9481147760615258,
+        "R2": 0.9937739468681321
+      },
+      "deployed_allhours": {
+        "MAE": 0.4735454858915154,
+        "nMAE_%": 0.47354548589151546,
+        "R2": 0.997313903044387
+      },
+      "physics_only": {
+        "MAE": 4.636269031289613,
+        "nMAE_%": 4.636269031289613,
+        "R2": 0.9506101524749436
+      },
+      "persistence_24h": {
+        "MAE": 3.8734484457414724,
+        "nMAE_%": 3.8734484457414724,
+        "R2": 0.8969271382820088
+      },
+      "daytime_R2_context": "solar R2 reported daytime-only (ghi>10)"
+    },
+    "cross-site (all 2024, Chennai)": {
+      "window": "8784h (cross-site (all 2024, Chennai))",
+      "site": "solar_2024_chennai.csv",
+      "deployed": {
+        "MAE": 3.7388451323604883,
+        "nMAE_%": 3.7388451323604883,
+        "R2": 0.9598425173151958
+      },
+      "deployed_allhours": {
+        "MAE": 1.8774546314380638,
+        "nMAE_%": 1.877454631438064,
+        "R2": 0.9809510564293595
+      },
+      "physics_only": {
+        "MAE": 4.236794071232544,
+        "nMAE_%": 4.236794071232544,
+        "R2": 0.9504935976046377
+      },
+      "persistence_24h": {
+        "MAE": 6.047957590752042,
+        "nMAE_%": 6.047957590752042,
+        "R2": 0.8262067660714392
+      },
+      "daytime_R2_context": "solar R2 reported daytime-only (ghi>10)"
+    }
+  },
+  "wind": {
+    "in-distribution (last 30% of 2024, Jaisalmer)": {
+      "window": "8784h (in-distribution (last 30% of 2024, Jaisalmer))",
+      "site": "wind_generation.csv",
+      "deployed": {
+        "MAE": 1.101657866223867,
+        "nMAE_%": 1.101657866223867,
+        "R2": 0.9860973032473762
+      },
+      "physics_only": {
+        "MAE": 0.9046384952883992,
+        "nMAE_%": 0.9046384952883991,
+        "R2": 0.9975716585492445
+      },
+      "persistence_24h": {
+        "MAE": 35.6407382195557,
+        "nMAE_%": 35.6407382195557,
+        "R2": -0.49794589747757323
+      }
+    },
+    "cross-year (all 2023, Jaisalmer)": {
+      "window": "8760h (cross-year (all 2023, Jaisalmer))",
+      "site": "wind_2023_jaisalmer.csv",
+      "deployed": {
+        "MAE": 1.0949497963749857,
+        "nMAE_%": 1.0949497963749857,
+        "R2": 0.9871459283071646
+      },
+      "physics_only": {
+        "MAE": 0.8865092350977133,
+        "nMAE_%": 0.8865092350977133,
+        "R2": 0.9973325690361131
+      },
+      "persistence_24h": {
+        "MAE": 35.082595088541495,
+        "nMAE_%": 35.082595088541495,
+        "R2": -0.49142238893510437
+      }
+    },
+    "cross-site (all 2024, Kanyakumari)": {
+      "window": "8784h (cross-site (all 2024, Kanyakumari))",
+      "site": "wind_2024_kanyakumari.csv",
+      "deployed": {
+        "MAE": 1.2416012708346482,
+        "nMAE_%": 1.2416012708346482,
+        "R2": 0.9771950942952711
+      },
+      "physics_only": {
+        "MAE": 0.800850389657539,
+        "nMAE_%": 0.8008503896575391,
+        "R2": 0.9973417835845317
+      },
+      "persistence_24h": {
+        "MAE": 27.748359479301175,
+        "nMAE_%": 27.748359479301175,
+        "R2": -0.1208103479792062
+      }
+    }
+  }
+}

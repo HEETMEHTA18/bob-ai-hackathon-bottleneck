@@ -1,0 +1,82 @@
+{
+  "timestamp": "2026-09-13T15:26:00.233772",
+  "asset": "evaluation",
+  "capacity_kw": 100.0,
+  "test_window": "2636h (last 30%, chronological)",
+  "daytime_only_note": "solar R2 reported daytime-only (ghi>10); full-window R2 shown as all_R2",
+  "metrics_by_model": {
+    "persistence_1h": {
+      "MAE": 12.914263724223158,
+      "RMSE": 14.841776668154207,
+      "nMAE_%": 12.914263724223158,
+      "R2": 0.6335833365904973
+    },
+    "persistence_24h": {
+      "MAE": 2.1708928674495143,
+      "RMSE": 5.2619601142433785,
+      "nMAE_%": 2.1708928674495143,
+      "R2": 0.9539426936448389
+    },
+    "climatology": {
+      "MAE": 5.20787483562677,
+      "RMSE": 6.844443733645253,
+      "nMAE_%": 5.207874835626771,
+      "R2": 0.9220744732827453
+    },
+    "naive_mean": {
+      "MAE": 29.513851628777015,
+      "RMSE": 34.48504454465982,
+      "nMAE_%": 29.513851628777015,
+      "R2": -0.9781763885261197
+    },
+    "physics_only": {
+      "MAE": 5.2697015429557625,
+      "RMSE": 6.256010275573189,
+      "nMAE_%": 5.269701542955762,
+      "R2": 0.9348973993001604
+    },
+    "xgb_no_physics": {
+      "MAE": 1.0914423212400173,
+      "RMSE": 2.4130485556916135,
+      "nMAE_%": 1.0914423212400173,
+      "R2": 0.9903141987528236
+    },
+    "deployed_surge": {
+      "MAE": 1.1052976195842144,
+      "RMSE": 2.4714939414583292,
+      "nMAE_%": 1.1052976195842144,
+      "R2": 0.989839325670018
+    }
+  },
+  "diebold_mariano_vs_deployed": {
+    "persistence_1h": {
+      "stat": 31.865,
+      "p_value": 0.0
+    },
+    "persistence_24h": {
+      "stat": 4.481,
+      "p_value": 0.0
+    },
+    "climatology": {
+      "stat": 20.319,
+      "p_value": 0.0
+    },
+    "naive_mean": {
+      "stat": 89.883,
+      "p_value": 0.0
+    },
+    "physics_only": {
+      "stat": 22.186,
+      "p_value": 0.0
+    },
+    "xgb_no_physics": {
+      "stat": 8.646,
+      "p_value": 0.0
+    },
+    "deployed_surge": {
+      "stat": NaN,
+      "p_value": NaN
+    }
+  },
+  "interpretation": "DM stat > 0 with p<0.05 => deployed significantly BETTER than baseline; p>0.95 => deployed significantly WORSE; 0.05<p<0.95 => no significant difference."
+}

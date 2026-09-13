@@ -1,0 +1,82 @@
+{
+  "timestamp": "2026-09-13T15:26:01.585726",
+  "asset": "wind",
+  "capacity_kw": 100.0,
+  "test_window": "2636h (last 30%, chronological)",
+  "daytime_only_note": null,
+  "metrics_by_model": {
+    "persistence_1h": {
+      "MAE": 11.662660372377475,
+      "RMSE": 21.315009548785177,
+      "nMAE_%": 11.662660372377475,
+      "R2": 0.7155718655866327
+    },
+    "persistence_24h": {
+      "MAE": 30.35753008938708,
+      "RMSE": 44.129089085021334,
+      "nMAE_%": 30.35753008938708,
+      "R2": -0.21913392125931375
+    },
+    "climatology": {
+      "MAE": 40.2548179319473,
+      "RMSE": 43.71753713071674,
+      "nMAE_%": 40.2548179319473,
+      "R2": -0.19650044589485738
+    },
+    "naive_mean": {
+      "MAE": 40.15297549053049,
+      "RMSE": 43.4940820794094,
+      "nMAE_%": 40.15297549053049,
+      "R2": -0.18430027213651123
+    },
+    "physics_only": {
+      "MAE": 0.8940911671128607,
+      "RMSE": 1.3772383879828716,
+      "nMAE_%": 0.8940911671128607,
+      "R2": 0.998812537978887
+    },
+    "xgb_no_physics": {
+      "MAE": 0.9528996174735374,
+      "RMSE": 1.313420269490521,
+      "nMAE_%": 0.9528996174735372,
+      "R2": 0.9989200368965
+    },
+    "deployed_surge": {
+      "MAE": 0.9237847738489096,
+      "RMSE": 1.3850694371241155,
+      "nMAE_%": 0.9237847738489096,
+      "R2": 0.9987989956451417
+    }
+  },
+  "diebold_mariano_vs_deployed": {
+    "persistence_1h": {
+      "stat": 22.815,
+      "p_value": 0.0
+    },
+    "persistence_24h": {
+      "stat": 20.117,
+      "p_value": 0.0
+    },
+    "climatology": {
+      "stat": 49.34,
+      "p_value": 0.0
+    },
+    "naive_mean": {
+      "stat": 48.264,
+      "p_value": 0.0
+    },
+    "physics_only": {
+      "stat": -4.511,
+      "p_value": 0.0
+    },
+    "xgb_no_physics": {
+      "stat": 2.862,
+      "p_value": 0.0042
+    },
+    "deployed_surge": {
+      "stat": NaN,
+      "p_value": NaN
+    }
+  },
+  "interpretation": "DM stat > 0 with p<0.05 => deployed significantly BETTER than baseline; p>0.95 => deployed significantly WORSE; 0.05<p<0.95 => no significant difference."
+}

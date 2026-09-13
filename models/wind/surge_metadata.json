@@ -1,0 +1,54 @@
+{
+  "best_model": "HistGradientBoosting",
+  "training_date": "2026-09-13T00:12:59.800454",
+  "plant_capacity_kw": 100.0,
+  "feature_columns": [
+    "wind_speed_10m",
+    "wind_speed_100m",
+    "wind_gusts_10m",
+    "wind_dir_sin",
+    "wind_dir_cos",
+    "air_density",
+    "temperature_2m",
+    "surface_pressure",
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "day_of_year_sin",
+    "day_of_year_cos",
+    "wind_speed_rolling_3h",
+    "wind_speed_rolling_6h"
+  ],
+  "all_model_results": [
+    {
+      "model": "Ridge",
+      "train_time_s": 0.0,
+      "test_mae": 6.526,
+      "test_rmse": 9.402,
+      "test_r2": 0.9196
+    },
+    {
+      "model": "RandomForest",
+      "train_time_s": 0.14,
+      "test_mae": 3.707,
+      "test_rmse": 4.908,
+      "test_r2": 0.9781
+    },
+    {
+      "model": "HistGradientBoosting",
+      "train_time_s": 0.26,
+      "test_mae": 3.57,
+      "test_rmse": 4.723,
+      "test_r2": 0.9797
+    },
+    {
+      "model": "XGBoost",
+      "train_time_s": 0.25,
+      "test_mae": 3.606,
+      "test_rmse": 4.776,
+      "test_r2": 0.9793
+    }
+  ],
+  "quantile_coverage_pct": 86.7
+}
