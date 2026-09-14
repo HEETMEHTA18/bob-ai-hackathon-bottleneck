@@ -663,7 +663,7 @@ async def _build_response(message: str, site: Optional[Site], db: AsyncSession, 
 
     if intent == 'help':
         return (
-            f"### GridMind AI Copilot — {site.name}\n\n"
+            f"### GridShield AI — {site.name}\n\n"
             f"Your **{site.capacity_kw} kW {site.site_type}** system at "
             f"**{site.latitude:.2f}°N, {site.longitude:.2f}°E**\n\n"
             "**What I can do:**\n"
@@ -680,7 +680,7 @@ async def _build_response(message: str, site: Optional[Site], db: AsyncSession, 
 
     if intent == 'greeting':
         return (
-            f"Hey! I'm your GridMind copilot for **{site.name}** ({site.capacity_kw} kW {site.site_type}).\n\n"
+            f"Hey! I'm your GridShield advisor for **{site.name}** ({site.capacity_kw} kW {site.site_type}).\n\n"
             "**I can help with:**\n"
             "- Forecast — generation predictions with uncertainty\n"
             "- Risk — curtailment analysis\n"

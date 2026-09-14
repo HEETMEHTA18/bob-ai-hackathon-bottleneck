@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, Fragment, lazy, Suspense } from 'react'
 import {
-  GSCommandCenter, GSAssetIntelligence, GSMaintenance, GSCrewPlanner, GSScenarioSim, GSCopilot
+  GSCommandCenter, GSAssetIntelligence, GSMaintenance, GSCrewPlanner, GSScenarioSim
 } from './components/gridshield'
 import {
   signup, login, getMe, listSites, createSite,
@@ -47,23 +47,20 @@ import { LandingPage } from '@/components/landing/LandingPage'
 import toast from 'react-hot-toast'
 
 // ─── Nav definition ───────────────────────────────────────────────────────────
-const navItems: { id: string; label: string; icon: LucideIcon; section?: string }[] = [
-  // GridShield (primary)
-  { id: 'gs_dashboard',    label: 'Command Center',  icon: ShieldAlert, section: 'GridShield' },
-  { id: 'gs_maintenance',  label: 'Maintenance',     icon: Rocket,      section: 'GridShield' },
-  { id: 'gs_crew',         label: 'Crew Planner',    icon: Compass,     section: 'GridShield' },
-  { id: 'gs_scenarios',    label: 'Scenarios',       icon: Shuffle,     section: 'GridShield' },
-  { id: 'gs_copilot',      label: 'AI Advisor',      icon: Bot,         section: 'GridShield' },
-  // Gridkavach (legacy)
-  { id: 'dashboard',   label: 'Dashboard',     icon: LayoutDashboard, section: 'Gridkavach' },
-  { id: 'forecast',    label: 'Forecast',      icon: TrendingUp,      section: 'Gridkavach' },
-  { id: 'risk',        label: 'Risk Analysis', icon: ShieldAlert,     section: 'Gridkavach' },
-  { id: 'optimize',    label: 'Optimize',      icon: Zap,             section: 'Gridkavach' },
-  { id: 'insights',    label: 'Insights',      icon: Sparkles,        section: 'Gridkavach' },
-  { id: 'anomalies',   label: 'Anomalies',     icon: ScanSearch,      section: 'Gridkavach' },
-  { id: 'data',        label: 'Data Sources',  icon: Database,        section: 'Gridkavach' },
-  { id: 'ai',          label: 'AI Copilot',    icon: Bot,             section: 'Gridkavach' },
-  { id: 'settings',    label: 'Settings',      icon: Settings,        section: 'Gridkavach' },
+const navItems: { id: string; label: string; icon: LucideIcon }[] = [
+  { id: 'gs_dashboard',    label: 'Command Center',  icon: ShieldAlert },
+  { id: 'dashboard',       label: 'Dashboard',       icon: LayoutDashboard },
+  { id: 'forecast',        label: 'Forecast',        icon: TrendingUp },
+  { id: 'risk',            label: 'Risk Analysis',   icon: Shuffle },
+  { id: 'optimize',        label: 'Optimize',        icon: Zap },
+  { id: 'insights',        label: 'Insights',        icon: Sparkles },
+  { id: 'anomalies',       label: 'Anomalies',       icon: ScanSearch },
+  { id: 'data',            label: 'Data Sources',    icon: Database },
+  { id: 'gs_maintenance',  label: 'Maintenance',     icon: Rocket },
+  { id: 'gs_crew',         label: 'Crew Planner',    icon: Compass },
+  { id: 'gs_scenarios',    label: 'Scenarios',       icon: Shuffle },
+  { id: 'gs_copilot',      label: 'AI Advisor',      icon: Bot },
+  { id: 'settings',        label: 'Settings',        icon: Settings },
 ]
 
 // ─── Auth Context ─────────────────────────────────────────────
@@ -111,14 +108,13 @@ function useAuth() {
 function Sidebar({ page, onNav, onLogout, user }: { page: string; onNav: (p: string) => void; onLogout: () => void; user: User }) {
   const [sites, setSites] = useState<Site[]>([])
   const [activeSite, setActiveSite] = useState<Site | null>(null)
-  const collapsed = page === 'ai'
 
   const refreshSites = useCallback(() => {
     listSites().then(r => {
       setSites(r.data)
       if (r.data.length > 0 && !activeSite) {
         setActiveSite(r.data[0])
-        ;(window as any).__GRIDMIND_SITE__ = r.data[0]
+        ;(window as any).__GRIDSHIELD_SITE__ = r.data[0]
         window.dispatchEvent(new Event('siteChanged'))
       }
     }).catch(() => {})
@@ -133,48 +129,36 @@ function Sidebar({ page, onNav, onLogout, user }: { page: string; onNav: (p: str
   }, [refreshSites])
 
   useEffect(() => {
-    ;(window as any).__GRIDMIND_SITE__ = activeSite
+    ;(window as any).__GRIDSHIELD_SITE__ = activeSite
   }, [activeSite])
 
   return (
-    <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''}`}>
+    <aside className="sidebar">
       <div className="sidebar-logo">
         <div className="sidebar-logo-icon"><ShieldAlert size={18} /></div>
-        {!collapsed && (
-          <div>
-            <h1>GridShield</h1>
-            <p>Grid Ops AI</p>
-          </div>
-        )}
+        <div>
+          <h1>GridShield</h1>
+          <p>Grid Ops AI</p>
+        </div>
       </div>
 
-      {!collapsed && (
-        <div className="sidebar-section">
-          <div className="sidebar-label">Renewables Site</div>
-          <select className="select" value={activeSite?.id || ''} onChange={e => {
-            const s = sites.find(s => s.id === e.target.value) || null
-            setActiveSite(s)
-            ;(window as any).__GRIDMIND_SITE__ = s
-            window.dispatchEvent(new Event('siteChanged'))
-          }}>
-            {sites.length === 0 && <option value="">No sites yet</option>}
-            {sites.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
-        </div>
-      )}
+      <div className="sidebar-section">
+        <div className="sidebar-label">Renewables Site</div>
+        <select className="select" value={activeSite?.id || ''} onChange={e => {
+          const s = sites.find(s => s.id === e.target.value) || null
+          setActiveSite(s)
+          ;(window as any).__GRIDSHIELD_SITE__ = s
+          window.dispatchEvent(new Event('siteChanged'))
+        }}>
+          {sites.length === 0 && <option value="">No sites yet</option>}
+          {sites.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
+      </div>
 
       <nav className="sidebar-nav">
-        {/* GridShield section */}
-        {!collapsed && <div className="sidebar-label" style={{paddingTop: 4}}>GridShield</div>}
-        {navItems.filter(i => i.section === 'GridShield').map(item => (
-          <button key={item.id} className={`nav-item ${page === item.id ? 'active' : ''}`} onClick={() => onNav(item.id)} title={collapsed ? item.label : undefined}>
-            <item.icon /><span>{item.label}</span>
-          </button>
-        ))}
-        {/* Gridkavach section */}
-        {!collapsed && <div className="sidebar-label" style={{paddingTop: 8, marginTop: 4, borderTop: '1px solid #e0e0e0'}}>Gridkavach</div>}
-        {navItems.filter(i => i.section === 'Gridkavach').map(item => (
-          <button key={item.id} className={`nav-item ${page === item.id ? 'active' : ''}`} onClick={() => onNav(item.id)} title={collapsed ? item.label : undefined}>
+        <div className="sidebar-label" style={{paddingTop: 4}}>GridShield</div>
+        {navItems.map(item => (
+          <button key={item.id} className={`nav-item ${page === item.id ? 'active' : ''}`} onClick={() => onNav(item.id)}>
             <item.icon /><span>{item.label}</span>
           </button>
         ))}
@@ -184,7 +168,7 @@ function Sidebar({ page, onNav, onLogout, user }: { page: string; onNav: (p: str
         <div className="flex-between">
           <div className="user-info">
             <div className="user-name">{user.full_name}</div>
-            {!collapsed && <div className="user-email">{user.email}</div>}
+            <div className="user-email">{user.email}</div>
           </div>
           <button className="btn btn-ghost btn-sm" onClick={onLogout} title="Logout">
             <Power size={16} />
@@ -303,10 +287,6 @@ function Dashboard({ site }: { site: Site }) {
             </div>
           ) : <div className="text-sm text-muted">Loading risk data...</div>}
         </div>
-      </div>
-
-      <div className="card overflow-hidden mt-6">
-        <AIAssistantInterface embed />
       </div>
     </div>
   )
@@ -1324,15 +1304,6 @@ function SettingsPage({ onSiteCreated }: { onSiteCreated: () => void }) {
   )
 }
 
-// ─── AI Copilot Full Page ──────────────────────────────────────
-function AICopilotPage({ onNavigate }: { onNavigate: (p: string) => void }) {
-  return (
-    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <AIAssistantInterface embed />
-    </div>
-  )
-}
-
 // ─── Main App ─────────────────────────────────────────────────
 export default function App() {
   const { user, doSignup, doLogin, doLogout } = useAuth()
@@ -1354,14 +1325,14 @@ export default function App() {
   // Listen for site changes from sidebar
   useEffect(() => {
     const handler = (e: any) => {
-      const site = (window as any).__GRIDMIND_SITE__
+      const site = (window as any).__GRIDSHIELD_SITE__
       setActiveSite(site || null)
     }
     window.addEventListener('siteChanged', handler)
     window.addEventListener('siteCreated', handler)
     // Initial load
     const timer = setTimeout(() => {
-      const site = (window as any).__GRIDMIND_SITE__
+      const site = (window as any).__GRIDSHIELD_SITE__
       setActiveSite(site || null)
     }, 500)
     return () => {
@@ -1373,7 +1344,7 @@ export default function App() {
 
   if (!user) return <LandingPage onLogin={doLogin} onSignup={doSignup} />
 
-  const site = activeSite || (window as any).__GRIDMIND_SITE__
+  const site = activeSite || (window as any).__GRIDSHIELD_SITE__
   const noSite = !site
 
   function goToGsAsset(id: string) { setGsAssetId(id); setPage('gs_asset') }
@@ -1389,11 +1360,11 @@ export default function App() {
       case 'gs_maintenance': return <GSMaintenance onSelectAsset={goToGsAsset} />
       case 'gs_crew':        return <GSCrewPlanner onSelectAsset={goToGsAsset} />
       case 'gs_scenarios':   return <GSScenarioSim onSelectAsset={goToGsAsset} />
-      case 'gs_copilot':     return <GSCopilot />
+      case 'gs_copilot':     return <div style={{height:'calc(100vh - 64px)',display:'flex',flexDirection:'column'}}><AIAssistantInterface /></div>
     }
 
-    // Gridkavach pages — require a site
-    if (noSite && !['settings', 'data', 'anomalies', 'ai'].includes(page)) {
+    // Site-specific pages — require a site
+    if (noSite && !['settings', 'data', 'anomalies'].includes(page)) {
       return (
         <div className="empty-state">
           <div className="empty-icon"><Factory /></div>
@@ -1412,39 +1383,17 @@ export default function App() {
       case 'insights': return <InsightsPage site={site} />
       case 'anomalies': return <AnomaliesPage />
       case 'data': return <DataPage site={site} />
-      case 'ai': return <AICopilotPage onNavigate={setPage} />
       case 'settings': return <SettingsPage onSiteCreated={() => setSiteVersion(v => v + 1)} />
       default: return <Dashboard site={site} />
     }
   }
 
-  const isAIPage = page === 'ai'
-
   return (
     <div style={{display:'flex',height:'100vh'}}>
-      {!isAIPage && <Sidebar page={page} onNav={setPage} onLogout={doLogout} user={user} />}
-      {isAIPage && (
-        <aside className="sidebar sidebar-collapsed">
-          <div className="sidebar-logo">
-            <div className="sidebar-logo-icon"><Zap size={18} /></div>
-          </div>
-          <nav className="sidebar-nav">
-            {navItems.map(item => (
-              <button key={item.id} className={`nav-item ${page === item.id ? 'active' : ''}`} onClick={() => setPage(item.id)} title={item.label}>
-                <item.icon />
-              </button>
-            ))}
-          </nav>
-          <div className="sidebar-footer">
-            <button className="btn btn-ghost btn-sm" onClick={doLogout} title="Logout">
-              <Power size={16} />
-            </button>
-          </div>
-        </aside>
-      )}
-      <main className={`main ${isAIPage ? 'main-ai' : ''}`}>
-        <div className={`${isAIPage ? 'main-content-ai' : 'main-content'}`} key={siteVersion}>
-{renderPage()}
+      <Sidebar page={page} onNav={setPage} onLogout={doLogout} user={user} />
+      <main className="main">
+        <div className="main-content" key={siteVersion}>
+          {renderPage()}
         </div>
       </main>
     </div>

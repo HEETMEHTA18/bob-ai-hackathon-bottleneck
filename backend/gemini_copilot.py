@@ -39,7 +39,7 @@ def _ensure_configured():
         _api_key = None
 
 
-SYSTEM_PROMPT = """You are GridMind AI — a premium renewable energy analyst copilot. You provide data-driven, actionable insights for solar/wind system owners.
+SYSTEM_PROMPT = """You are GridShield AI — a premium grid operations intelligence advisor. You provide data-driven, actionable insights for solar/wind system owners.
 
 ## Response Format Rules
 1. ALWAYS use markdown formatting: headers (###), tables, bold, bullet points.
