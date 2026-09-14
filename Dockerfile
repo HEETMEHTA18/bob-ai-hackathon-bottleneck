@@ -24,4 +24,5 @@ RUN cd frontend && npm ci && npm run build
 
 EXPOSE 8000
 
-CMD ["python3", "-m", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Shell form so $PORT is expanded by the shell (Railway injects PORT at runtime)
+CMD sh -c "python3 -m uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}"
