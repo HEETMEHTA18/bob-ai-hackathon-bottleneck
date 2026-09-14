@@ -1,270 +1,163 @@
-# GridMind AI — Renewable Energy Forecasting & Decision Platform
+# GridShield AI — IBM Bob Hackathon 2026
 
-> **HackOut'26** · Theme: Renewable Energy Intelligence · Built in 48 hours
+## Power Outage Prediction & Grid Equipment Failure Advisor
 
-[![Python](https://img.shields.io/badge/Python-3.12-blue)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-green)](https://fastapi.tiangolo.com)
-[![React](https://img.shields.io/badge/React-18-61DAFB)](https://react.dev)
-[![XGBoost](https://img.shields.io/badge/XGBoost-2.0-orange)](https://xgboost.readthedocs.io)
-[![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
+GridShield is an AI-powered grid reliability platform that predicts equipment failures,
+ranks assets by operational risk, generates maintenance plans, and pre-positions field crews
+before outages occur.
 
----
-
-## Overview
-
-GridMind AI is an explainable decision layer for renewable energy operators. It forecasts solar and wind generation 24–72 hours ahead with calibrated uncertainty bands, flags over/under-generation risks, and recommends grid actions (battery dispatch, curtailment, backup activation) — all with financial (₹) and environmental (CO₂) impact estimates.
-
-**Target users:** Smaller renewable operators who lack expensive SCADA/forecasting infrastructure.
+**Core product story:** PREDICT → EXPLAIN → PRIORITIZE → POSITION
 
 ---
 
-## Key Features
+## Quick Start
 
-- **Physics-Informed ML Models** — pvlib solar physics + XGBoost residual correction; LightGBM for wind with IEC power curve gating
-- **SURGE Architecture** — 21 solar features, 16 wind features, site-agnostic and capacity-agnostic
-- **Uncertainty Quantification** — P10/P50/P90 quantile regression with band calibration
-- **Lambda Architecture** — Batch (historical) + Speed (real-time) + Serving (merged) layers
-- **AI Copilot** — Gemini-powered chat interface with structured markdown responses
-- **Risk Analysis** — Hourly over/under-generation risk with financial impact
-- **Battery Optimization** — Charge/discharge scheduling with savings estimates
-- **Real-Time Weather** — Open-Meteo API (GHI, DNI, DHI, wind, temperature) — no API key required
+```bash
+# 1. Install backend dependencies
+pip install -r requirements.txt
+
+# 2. Start the backend (port 8000)
+uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+
+# 3. Build and serve the frontend
+cd frontend && npm install && npm run build
+# Then open http://localhost:8000 in your browser
+
+# OR for frontend dev server:
+cd frontend && npm run dev   # http://localhost:5173
+```
+
+No external API keys are required. The application works fully in demo mode
+using the deterministic mock ML pipeline and synthetic asset data.
+
+**Optional:** Set `GEMINI_API_KEY` in `.env` to enable the Gemini-powered AI copilot.
 
 ---
 
-## Model Performance
+## Application Pages
 
-### Solar (XGBoost + pvlib physics, 100 kW Bhadla)
+| Page | Description |
+|------|-------------|
+| **Command Center** | Dashboard with KPIs, risk ranking table, and live alerts |
+| **Asset Intelligence** | Full detail view for any asset — telemetry, risk, incidents, grid impact |
+| **Maintenance Planner** | Impact-aware maintenance priorities with filtering |
+| **Crew Planner** | Field crew pre-positioning and dispatch assignments |
+| **Scenario Simulator** | What-if analysis: Severe Storm, Heatwave, Asset Degradation |
+| **AI Copilot** | Grounded Grid Operations Advisor — answers from backend data only |
 
-| Metric | Value |
-|--------|-------|
-| MAE | 0.63 kW |
-| R² | **0.9986** |
-| nMAE | 0.63% |
-| Walk-Forward R² | **0.9991** |
-| 80% Coverage | 82% |
+---
 
-### Wind (LightGBM + IEC physics, 100 kW Jaisalmer)
+## API Endpoints
 
-| Metric | Value |
-|--------|-------|
-| MAE | 0.92 kW |
-| R² | **0.9988** |
-| nMAE | 0.92% |
+All GridShield endpoints are under `/api/gs/`:
 
-### Baseline Comparison (Solar)
-
-| Model | MAE | R² | vs Deployed |
-|-------|-----|-----|-------------|
-| **Deployed (XGBoost + physics)** | **1.11** | **0.9898** | — |
-| Persistence (24h) | 2.17 | 0.954 | −49% worse |
-| Climatology | 5.21 | 0.922 | −79% worse |
-| Physics-only (pvlib) | 5.27 | 0.935 | −79% worse |
-| Naive mean | 29.51 | −0.978 | −96% worse |
-
-### Generalization
-
-| Experiment | Solar R² | Wind R² |
-|------------|----------|---------|
-| Cross-year (2023, same sites) | 0.994 | 0.987 |
-| Cross-site (Chennai/Kanyakumari) | 0.960 | 0.977 |
+```
+GET  /api/gs/assets                        # List all 30 grid assets
+GET  /api/gs/assets/{id}                   # Asset detail
+GET  /api/gs/assets/{id}/telemetry         # 48h hourly telemetry
+GET  /api/gs/assets/{id}/incidents         # Incident history
+GET  /api/gs/assets/{id}/maintenance       # Maintenance history
+GET  /api/gs/assets/{id}/intelligence      # Full intelligence page data
+GET  /api/gs/weather                       # Weather exposure for all/one asset
+GET  /api/gs/predictions                   # ML failure predictions
+GET  /api/gs/risk/ranking                  # Risk-ranked asset list
+GET  /api/gs/dashboard/kpis                # Dashboard KPI counts
+GET  /api/gs/dashboard/alerts              # Active alerts
+GET  /api/gs/maintenance/priorities        # Maintenance priorities (filterable)
+GET  /api/gs/crew                          # All crews
+GET  /api/gs/crew/plan                     # Crew pre-positioning plan
+POST /api/gs/scenarios/simulate            # Run a scenario
+POST /api/gs/chat                          # AI copilot query
+GET  /health                               # Health check
+```
 
 ---
 
 ## Architecture
 
 ```
-Weather API (Open-Meteo)  ──┐
-                             ├──▶ Feature Engineering ──▶ Forecast Engine ──▶ Decision Engine ──▶ Dashboard
-Historical Generation CSV ──┘
+Asset Telemetry (deterministic synthetic)
+      +
+Incident History
+      +
+Weather Exposure (Open-Meteo live or deterministic mock fallback)
+      ↓
+MockFailurePredictor  ←── INTEGRATION SEAM (replace with RealFailurePredictor)
+      ↓
+FailurePrediction contract (stable)
+      ↓
+Grid Impact Engine  +  Risk Engine (composite score 0-100)
+      ↓
+Risk Ranking
+      ↓
+      ┌──────────────────┬────────────────────┐
+      ↓                  ↓
+Maintenance            Crew
+Prioritization         Pre-positioning
+      └──────────────────┴────────────────────┘
+                          ↓
+              GridShield Command Center (React/TypeScript)
 ```
 
+### ML Integration Seam
+
+To replace the mock predictor with the real ML pipeline:
+
+```python
+# backend/gridshield/ml_adapter.py
+# Change get_predictor() to return RealFailurePredictor()
+# Set env: GRIDSHIELD_USE_REAL_ML=1
+
+class RealFailurePredictor(FailurePredictor):
+    def predict(self, asset_id, latest_telemetry, incidents, weather,
+                asset_age_years, asset_criticality) -> FailurePrediction:
+        # Call teammate's model
+        ...
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    FastAPI Backend (port 8000)               │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │ Auth     │  │ Forecast │  │ Chat     │  │ Data     │   │
-│  │ (JWT)    │  │ (SURGE)  │  │ (Gemini) │  │ (Sync)   │   │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐                  │
-│  │ Risk     │  │ Optimize │  │ Insights │                  │
-│  │ Analysis │  │ Battery  │  │ Weather  │                  │
-│  └──────────┘  └──────────┘  └──────────┘                  │
-└─────────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────────┐
-│              React + TypeScript Frontend (SPA)              │
-│  Dashboard · Forecast · Risk · Optimize · AI Chat · Data   │
-└─────────────────────────────────────────────────────────────┘
-```
+
+The `FailurePrediction` contract is stable. No frontend, risk engine, maintenance
+planner, or crew planner changes are needed.
 
 ---
 
-## Tech Stack
+## Gridkavach Foundation Reused
 
-| Layer | Technology |
-|-------|-----------|
-| Backend | Python 3.12, FastAPI, SQLAlchemy, SQLite |
-| ML Models | XGBoost, LightGBM, pvlib, scikit-learn |
-| Uncertainty | Quantile regression (P10/P50/P90) |
-| Weather | Open-Meteo API (free, no key) |
-| AI Copilot | Google Gemini 2.5 Flash |
-| Frontend | React 18, TypeScript, Vite, Tailwind CSS |
-| Charts | Recharts |
-| Auth | JWT (bcrypt + python-jose) |
-| Deployment | Docker, Uvicorn |
+| Component | Status | Notes |
+|-----------|--------|-------|
+| FastAPI setup | ✅ KEPT | app structure, middleware, CORS, lifespan |
+| Weather provider (Open-Meteo) | ✅ ADAPTED | transformed to asset exposure scores |
+| Gemini copilot infrastructure | ✅ ADAPTED | transformed to Grid Operations Advisor |
+| React/TypeScript frontend | ✅ ADAPTED | GridShield pages added, old pages preserved |
+| Docker/deployment config | ✅ KEPT | unchanged |
+| Auth system | ✅ KEPT | legacy Gridkavach auth preserved |
+| Solar/wind forecasting | ⚠️ PRESERVED | not the primary UX; accessible via old routes |
 
 ---
 
-## Quick Start
-
-### 1. Clone & Install
+## Tests
 
 ```bash
-git clone https://github.com/HEETMEHTA18/Gridkavach.git
-cd Gridkavach
+# Run GridShield test suite
+python3 -m pytest tests/test_gridshield.py -v
 
-# Backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-
-# Frontend
-cd frontend
-npm install
-cd ..
-```
-
-### 2. Configure
-
-```bash
-cp .env.example .env
-# Edit .env with your settings (defaults work for local dev)
-```
-
-### 3. Run
-
-```bash
-# Backend (port 8000)
-python3 -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
-
-# Frontend (dev, port 5173)
-cd frontend && npm run dev
-```
-
-### 4. Login
-
-- **Email:** `demo@gridmind.com`
-- **Password:** `demo1234`
-
----
-
-## API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/auth/signup` | Create account |
-| POST | `/auth/login` | Get JWT token |
-| GET | `/sites/` | List sites |
-| POST | `/sites/` | Create site |
-| POST | `/api/forecast/{site_id}` | Generate forecast |
-| POST | `/api/risk/{site_id}` | Analyze risk |
-| POST | `/api/optimize/{site_id}` | Battery optimization |
-| GET | `/api/data/status/{site_id}` | Data status |
-| POST | `/api/data/sync/{site_id}` | Sync weather data |
-| POST | `/api/chat/sessions` | Create chat session |
-| POST | `/api/chat/sessions/{id}/chat` | Send message |
-
----
-
-## Documentation
-
-| Document | Description |
-|----------|-------------|
-| [PRD.md](PRD.md) | Product Requirements Document — problem statement, user stories, features |
-| [TRD.md](TRD.md) | Technical Requirements Document — architecture, tech stack, API design |
-| [model.md](model.md) | Model Development Specification — architecture, hyperparameters, training protocol |
-| [output.md](output.md) | Publication-stage metrics, maths & baseline comparison (SURGE Forecaster) |
-| [workflow.md](workflow.md) | End-to-end system workflow and data pipeline |
-| [work1.md](work1.md) | Module 1: Backend, ML Models & Data Pipeline (48h breakdown) |
-| [work2.md](work2.md) | Module 2: Frontend Dashboard & UI (48h breakdown) |
-| [SECURITY_REVIEW.md](SECURITY_REVIEW.md) | Security audit — CORS, XSS, SQL injection, secrets |
-| [VERTEX_AI_GUIDE.md](VERTEX_AI_GUIDE.md) | Vertex AI free tier integration guide |
-| [benchmarks/HONEST_BENCHMARK_REPORT.md](benchmarks/HONEST_BENCHMARK_REPORT.md) | Honest model benchmark with Diebold-Mariano tests |
-| [.env.example](.env.example) | Environment configuration template |
-
----
-
-## Project Structure
-
-```
-Gridkavach/
-├── backend/
-│   ├── main.py              # FastAPI app entry
-│   ├── config.py            # Environment config
-│   ├── database.py          # SQLAlchemy async engine
-│   ├── models_db.py         # DB models (User, Site, WeatherData, etc.)
-│   ├── schemas.py           # Pydantic schemas
-│   ├── auth.py              # JWT + bcrypt auth
-│   ├── gemini_copilot.py    # Gemini AI integration
-│   ├── forecasting/
-│   │   ├── inference.py     # SURGE inference (XGBoost + quantile)
-│   │   ├── features.py      # Feature engineering
-│   │   ├── solar.py         # pvlib physics model
-│   │   └── wind.py          # IEC power curve
-│   ├── weather/
-│   │   └── provider.py      # Open-Meteo API client
-│   ├── optimization/
-│   │   └── dispatch.py      # Battery dispatch engine
-│   └── routes/
-│       ├── auth.py          # Auth endpoints
-│       ├── forecast.py      # Forecast endpoints
-│       ├── risk.py          # Risk analysis
-│       ├── chat.py          # AI copilot chat
-│       └── data.py          # Data sync & status
-├── frontend/
-│   └── src/
-│       ├── App.tsx          # Main app (9 pages)
-│       ├── api/client.ts    # API client
-│       └── components/      # UI components
-├── models/
-│   ├── solar/               # XGBoost + quantile models
-│   └── wind/                # LightGBM + quantile models
-├── data/raw/                # Training datasets
-├── benchmarks/              # Evaluation reports
-├── requirements.txt
-├── Dockerfile
-└── docker-compose.yml
+# 44 tests: risk engine, mock ML, maintenance, crew, all API endpoints
 ```
 
 ---
 
-## Deployment
+## Environment Variables
 
-### Docker
+See `.env.example`. No secrets required for demo mode.
 
-```bash
-docker-compose up --build
-```
-
-### Manual
-
-```bash
-# Backend
-pip install -r requirements.txt
-uvicorn backend.main:app --host 0.0.0.0 --port 8000
-
-# Frontend (production build)
-cd frontend && npm run build
-# Serve from FastAPI (built-in)
-```
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `GEMINI_API_KEY` | Optional | Enables AI copilot LLM responses |
+| `GRIDSHIELD_USE_REAL_ML` | Optional | Set to `1` to enable real ML adapter |
+| `DATABASE_URL` | Optional | PostgreSQL URL (SQLite used by default) |
 
 ---
 
-## License
+## IBM Bob Engineering
 
-MIT
-
----
-
-Built for **HackOut'26** by Team GridKavach
+IBM Bob (IBM Codex AI) was used as the primary AI coding and development agent
+for the GridShield migration. Sessions are recorded in `docs/BOB_ENGINEERING_LOG.md`.

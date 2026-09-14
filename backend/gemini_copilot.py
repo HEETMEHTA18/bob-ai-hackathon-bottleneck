@@ -1,6 +1,9 @@
 """
-Gemini-powered AI copilot for GridMind.
+Gemini-powered AI copilot for GridMind / GridShield.
 Generates intelligent, context-aware responses using Google's Gemini API.
+
+The google-generativeai package is optional — the server starts and works
+fully without it; the copilot silently falls back to deterministic responses.
 """
 import os
 import json
@@ -8,21 +11,32 @@ import numpy as np
 from typing import Optional
 from datetime import datetime
 
-import google.generativeai as genai
-
+# Lazy optional import — do NOT import at module level so the server starts
+# even when the package is not installed.
+_genai = None
 _api_key = None
 _configured = False
 
 
 def _ensure_configured():
-    global _api_key, _configured
+    global _genai, _api_key, _configured
     if _configured:
         return
-    _api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-    if _api_key:
-        genai.configure(api_key=_api_key)
-        print(f"[Gemini] API key loaded ({_api_key[:8]}...)")
     _configured = True
+    _api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    if not _api_key:
+        return
+    try:
+        import google.generativeai as genai  # noqa: PLC0415
+        genai.configure(api_key=_api_key)
+        _genai = genai
+        print(f"[GridShield] Gemini API key loaded ({_api_key[:8]}...)")
+    except ModuleNotFoundError:
+        print("[GridShield] google-generativeai not installed — copilot uses fallback responses")
+        _api_key = None
+    except Exception as exc:
+        print(f"[GridShield] Gemini configure error: {exc}")
+        _api_key = None
 
 
 SYSTEM_PROMPT = """You are GridMind AI — a premium renewable energy analyst copilot. You provide data-driven, actionable insights for solar/wind system owners.
@@ -201,7 +215,7 @@ def ask_gemini(
     accuracy_data: Optional[dict] = None,
     conversation_history: Optional[list] = None,
 ) -> Optional[str]:
-    if not _has_api_key():
+    if not _has_api_key() or _genai is None:
         return None
 
     try:
@@ -227,7 +241,7 @@ def ask_gemini(
                 role = "user" if msg.get("role") == "user" else "model"
                 history.append({"role": role, "parts": [msg.get("content", "")]})
 
-        model = genai.GenerativeModel(
+        model = _genai.GenerativeModel(
             "gemini-2.5-flash",
             system_instruction=system_and_context,
         )
@@ -235,7 +249,7 @@ def ask_gemini(
         chat = model.start_chat(history=history)
         response = chat.send_message(
             user_message,
-            generation_config=genai.GenerationConfig(
+            generation_config=_genai.GenerationConfig(
                 temperature=0.3,
                 top_p=0.85,
                 top_k=40,

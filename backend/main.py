@@ -30,9 +30,9 @@ async def lifespan(app: FastAPI):
     # Load Gemini API key
     from backend.gemini_copilot import _has_api_key
     if _has_api_key():
-        print("[GridMind] Gemini API key loaded — AI copilot enabled")
+        print("[GridShield] Gemini API key loaded — AI copilot enabled")
     else:
-        print("[GridMind] No Gemini API key — using fallback responses")
+        print("[GridShield] No Gemini API key — using deterministic fallback advisor")
     poller_task = asyncio.create_task(poller.start())
     batch_task = asyncio.create_task(batch_processor.start())
     yield
@@ -42,9 +42,9 @@ async def lifespan(app: FastAPI):
     batch_task.cancel()
 
 app = FastAPI(
-    title="GridMind AI",
-    version="2.0.0",
-    description="AI-Powered Renewable Energy Forecasting Platform",
+    title="GridShield AI",
+    version="3.0.0",
+    description="Power Outage Prediction & Grid Equipment Failure Advisor",
     lifespan=lifespan,
 )
 
@@ -57,7 +57,7 @@ async def security_headers(request: Request, call_next):
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Cache-Control"] = "no-store"
-    response.headers.setdefault("Server", "GridMind")
+    response.headers.setdefault("Server", "GridShield")
     return response
 
 # Request ID + latency tracing for observability
@@ -84,13 +84,17 @@ app.add_middleware(
 
 app.include_router(api_router)
 
+# GridShield routes (new domain — coexists with Gridkavach routes)
+from backend.gridshield.routes import router as gridshield_router
+app.include_router(gridshield_router)
+
 @app.websocket("/ws/{site_id}")
 async def ws_endpoint(websocket: WebSocket, site_id: str, token: str = Query(...)):
     await websocket_endpoint(websocket, token, site_id)
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "GridMind AI", "version": "2.0.0"}
+    return {"status": "ok", "service": "GridShield AI", "version": "3.0.0"}
 
 # Serve frontend static files (production mode) — must be LAST route
 if FRONTEND_DIST.exists():

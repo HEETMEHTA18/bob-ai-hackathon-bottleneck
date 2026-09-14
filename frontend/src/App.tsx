@@ -1,4 +1,7 @@
-import { useState, useEffect, useCallback, useMemo, Fragment } from 'react'
+import { useState, useEffect, useCallback, useMemo, Fragment, lazy, Suspense } from 'react'
+import {
+  GSCommandCenter, GSAssetIntelligence, GSMaintenance, GSCrewPlanner, GSScenarioSim, GSCopilot
+} from './components/gridshield'
 import {
   signup, login, getMe, listSites, createSite,
   getForecast, getRisk, getExplain, runScenario,
@@ -43,17 +46,24 @@ import { AIAssistantInterface } from '@/components/ui/ai-assistant-interface'
 import { LandingPage } from '@/components/landing/LandingPage'
 import toast from 'react-hot-toast'
 
-// ─── Nav definition (shared by full sidebar + collapsed AI-page rail) ───
-const navItems: { id: string; label: string; icon: LucideIcon }[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'forecast', label: 'Forecast', icon: TrendingUp },
-  { id: 'risk', label: 'Risk Analysis', icon: ShieldAlert },
-  { id: 'optimize', label: 'Optimize', icon: Zap },
-  { id: 'insights', label: 'Insights', icon: Sparkles },
-  { id: 'anomalies', label: 'Anomalies', icon: ScanSearch },
-  { id: 'data', label: 'Data Sources', icon: Database },
-  { id: 'ai', label: 'AI Copilot', icon: Bot },
-  { id: 'settings', label: 'Settings', icon: Settings },
+// ─── Nav definition ───────────────────────────────────────────────────────────
+const navItems: { id: string; label: string; icon: LucideIcon; section?: string }[] = [
+  // GridShield (primary)
+  { id: 'gs_dashboard',    label: 'Command Center',  icon: ShieldAlert, section: 'GridShield' },
+  { id: 'gs_maintenance',  label: 'Maintenance',     icon: Rocket,      section: 'GridShield' },
+  { id: 'gs_crew',         label: 'Crew Planner',    icon: Compass,     section: 'GridShield' },
+  { id: 'gs_scenarios',    label: 'Scenarios',       icon: Shuffle,     section: 'GridShield' },
+  { id: 'gs_copilot',      label: 'AI Advisor',      icon: Bot,         section: 'GridShield' },
+  // Gridkavach (legacy)
+  { id: 'dashboard',   label: 'Dashboard',     icon: LayoutDashboard, section: 'Gridkavach' },
+  { id: 'forecast',    label: 'Forecast',      icon: TrendingUp,      section: 'Gridkavach' },
+  { id: 'risk',        label: 'Risk Analysis', icon: ShieldAlert,     section: 'Gridkavach' },
+  { id: 'optimize',    label: 'Optimize',      icon: Zap,             section: 'Gridkavach' },
+  { id: 'insights',    label: 'Insights',      icon: Sparkles,        section: 'Gridkavach' },
+  { id: 'anomalies',   label: 'Anomalies',     icon: ScanSearch,      section: 'Gridkavach' },
+  { id: 'data',        label: 'Data Sources',  icon: Database,        section: 'Gridkavach' },
+  { id: 'ai',          label: 'AI Copilot',    icon: Bot,             section: 'Gridkavach' },
+  { id: 'settings',    label: 'Settings',      icon: Settings,        section: 'Gridkavach' },
 ]
 
 // ─── Auth Context ─────────────────────────────────────────────
@@ -129,18 +139,18 @@ function Sidebar({ page, onNav, onLogout, user }: { page: string; onNav: (p: str
   return (
     <aside className={`sidebar ${collapsed ? 'sidebar-collapsed' : ''}`}>
       <div className="sidebar-logo">
-        <div className="sidebar-logo-icon"><Zap size={18} /></div>
+        <div className="sidebar-logo-icon"><ShieldAlert size={18} /></div>
         {!collapsed && (
           <div>
-            <h1>GridMind</h1>
-            <p>AI Energy Platform</p>
+            <h1>GridShield</h1>
+            <p>Grid Ops AI</p>
           </div>
         )}
       </div>
 
       {!collapsed && (
         <div className="sidebar-section">
-          <div className="sidebar-label">Active Site</div>
+          <div className="sidebar-label">Renewables Site</div>
           <select className="select" value={activeSite?.id || ''} onChange={e => {
             const s = sites.find(s => s.id === e.target.value) || null
             setActiveSite(s)
@@ -154,7 +164,16 @@ function Sidebar({ page, onNav, onLogout, user }: { page: string; onNav: (p: str
       )}
 
       <nav className="sidebar-nav">
-        {navItems.map(item => (
+        {/* GridShield section */}
+        {!collapsed && <div className="sidebar-label" style={{paddingTop: 4}}>GridShield</div>}
+        {navItems.filter(i => i.section === 'GridShield').map(item => (
+          <button key={item.id} className={`nav-item ${page === item.id ? 'active' : ''}`} onClick={() => onNav(item.id)} title={collapsed ? item.label : undefined}>
+            <item.icon /><span>{item.label}</span>
+          </button>
+        ))}
+        {/* Gridkavach section */}
+        {!collapsed && <div className="sidebar-label" style={{paddingTop: 8, marginTop: 4, borderTop: '1px solid #e0e0e0'}}>Gridkavach</div>}
+        {navItems.filter(i => i.section === 'Gridkavach').map(item => (
           <button key={item.id} className={`nav-item ${page === item.id ? 'active' : ''}`} onClick={() => onNav(item.id)} title={collapsed ? item.label : undefined}>
             <item.icon /><span>{item.label}</span>
           </button>
@@ -1317,9 +1336,10 @@ function AICopilotPage({ onNavigate }: { onNavigate: (p: string) => void }) {
 // ─── Main App ─────────────────────────────────────────────────
 export default function App() {
   const { user, doSignup, doLogin, doLogout } = useAuth()
-  const [page, setPage] = useState<string>('ai')
+  const [page, setPage] = useState<string>('gs_dashboard')
   const [siteVersion, setSiteVersion] = useState(0)
   const [activeSite, setActiveSite] = useState<Site | null>(null)
+  const [gsAssetId, setGsAssetId] = useState<string | null>(null)
 
   useEffect(() => {
     const handler = () => setSiteVersion(v => v + 1)
@@ -1356,7 +1376,23 @@ export default function App() {
   const site = activeSite || (window as any).__GRIDMIND_SITE__
   const noSite = !site
 
+  function goToGsAsset(id: string) { setGsAssetId(id); setPage('gs_asset') }
+  function backFromGsAsset() { setGsAssetId(null); setPage('gs_dashboard') }
+
   const renderPage = () => {
+    // GridShield pages — no site required
+    switch (page) {
+      case 'gs_dashboard':   return <GSCommandCenter onSelectAsset={goToGsAsset} />
+      case 'gs_asset':       return gsAssetId
+        ? <GSAssetIntelligence assetId={gsAssetId} onBack={backFromGsAsset} />
+        : <GSCommandCenter onSelectAsset={goToGsAsset} />
+      case 'gs_maintenance': return <GSMaintenance onSelectAsset={goToGsAsset} />
+      case 'gs_crew':        return <GSCrewPlanner onSelectAsset={goToGsAsset} />
+      case 'gs_scenarios':   return <GSScenarioSim onSelectAsset={goToGsAsset} />
+      case 'gs_copilot':     return <GSCopilot />
+    }
+
+    // Gridkavach pages — require a site
     if (noSite && !['settings', 'data', 'anomalies', 'ai'].includes(page)) {
       return (
         <div className="empty-state">
