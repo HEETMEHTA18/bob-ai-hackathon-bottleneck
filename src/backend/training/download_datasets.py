@@ -1,5 +1,5 @@
 """
-Dataset Download Script for GridMind AI
+Dataset Download Script for Bottleneck AI
 Downloads publicly available solar and wind datasets
 """
 import os
@@ -114,7 +114,7 @@ def download_from_kaggle():
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("GridMind AI — Dataset Preparation")
+    print("Bottleneck AI — Dataset Preparation")
     print("=" * 60)
 
     print("\n[1/2] Generating synthetic solar dataset...")

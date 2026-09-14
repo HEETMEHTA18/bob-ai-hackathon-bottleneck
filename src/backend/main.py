@@ -8,10 +8,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from backend.database import init_db
-from backend.routes import api_router
-from backend.websocket import websocket_endpoint
-from backend.services.live_poller import poller
-from backend.services.batch_processor import batch_processor
 
 # Load .env file
 _env_path = Path(__file__).parent.parent / ".env"
@@ -30,19 +26,13 @@ async def lifespan(app: FastAPI):
     # Load Gemini API key
     from backend.gemini_copilot import _has_api_key
     if _has_api_key():
-        print("[GridShield] Gemini API key loaded — AI copilot enabled")
+        print("[Bottleneck] Gemini API key loaded — AI copilot enabled")
     else:
-        print("[GridShield] No Gemini API key — using deterministic fallback advisor")
-    poller_task = asyncio.create_task(poller.start())
-    batch_task = asyncio.create_task(batch_processor.start())
+        print("[Bottleneck] No Gemini API key — using deterministic fallback advisor")
     yield
-    await poller.stop()
-    await batch_processor.stop()
-    poller_task.cancel()
-    batch_task.cancel()
 
 app = FastAPI(
-    title="GridShield AI",
+    title="Bottleneck AI",
     version="3.0.0",
     description="Power Outage Prediction & Grid Equipment Failure Advisor",
     lifespan=lifespan,
@@ -57,7 +47,7 @@ async def security_headers(request: Request, call_next):
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Cache-Control"] = "no-store"
-    response.headers.setdefault("Server", "GridShield")
+    response.headers.setdefault("Server", "Bottleneck")
     return response
 
 # Request ID + latency tracing for observability
@@ -71,9 +61,6 @@ async def request_tracing(request: Request, call_next):
     response.headers["X-Response-Time-Ms"] = str(elapsed_ms)
     return response
 
-# The SPA authenticates via Bearer tokens (not cookies), so credentials are not
-# required; a wildcard CORS origin is safe here and keeps direct API access
-# working from any preview host.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -82,19 +69,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(api_router)
-
-# GridShield routes (new domain — coexists with Gridkavach routes)
-from backend.gridshield.routes import router as gridshield_router
-app.include_router(gridshield_router)
-
-@app.websocket("/ws/{site_id}")
-async def ws_endpoint(websocket: WebSocket, site_id: str, token: str = Query(...)):
-    await websocket_endpoint(websocket, token, site_id)
+# Bottleneck routes (and /api/gs backward compatible alias)
+from backend.bottleneck.routes import router as bottleneck_router, gs_alias_router
+app.include_router(bottleneck_router)
+app.include_router(gs_alias_router)
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "GridShield AI", "version": "3.0.0"}
+    return {"status": "ok", "service": "Bottleneck AI", "version": "3.0.0"}
 
 # Serve frontend static files (production mode) — must be LAST route
 if FRONTEND_DIST.exists():
@@ -106,3 +88,4 @@ if FRONTEND_DIST.exists():
         if file_path.exists() and file_path.is_file():
             return FileResponse(file_path)
         return FileResponse(FRONTEND_DIST / "index.html")
+

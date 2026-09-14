@@ -1,4 +1,4 @@
-# IBM Bob Workflow — GridShield AI
+# IBM Bob Workflow — Bottleneck AI
 
 ## Required principle
 Bob IDE is a core engineering tool, not merely a code generator.

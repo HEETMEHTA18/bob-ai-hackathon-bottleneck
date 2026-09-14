@@ -1,4 +1,4 @@
-# GridShield AI — Integration Contract
+# Bottleneck AI — Integration Contract
 
 ## Principle
 Each of the four workstreams must be independently runnable and integrated only through stable contracts.

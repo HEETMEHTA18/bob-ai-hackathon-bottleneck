@@ -1,5 +1,5 @@
 """
-Retrain the GridMind solar models with walk-forward evaluation and save
+Retrain the Bottleneck solar models with walk-forward evaluation and save
 artifacts exactly where the inference engine expects them:
 
     models/solar/solar_hybrid.json        (XGBoost residual model)

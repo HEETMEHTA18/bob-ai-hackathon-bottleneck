@@ -1,5 +1,5 @@
 """
-Gemini-powered AI copilot for GridMind / GridShield.
+Gemini-powered AI copilot for Bottleneck / Bottleneck.
 Generates intelligent, context-aware responses using Google's Gemini API.
 
 The google-generativeai package is optional — the server starts and works
@@ -30,16 +30,16 @@ def _ensure_configured():
         import google.generativeai as genai  # noqa: PLC0415
         genai.configure(api_key=_api_key)
         _genai = genai
-        print(f"[GridShield] Gemini API key loaded ({_api_key[:8]}...)")
+        print(f"[Bottleneck] Gemini API key loaded ({_api_key[:8]}...)")
     except ModuleNotFoundError:
-        print("[GridShield] google-generativeai not installed — copilot uses fallback responses")
+        print("[Bottleneck] google-generativeai not installed — copilot uses fallback responses")
         _api_key = None
     except Exception as exc:
-        print(f"[GridShield] Gemini configure error: {exc}")
+        print(f"[Bottleneck] Gemini configure error: {exc}")
         _api_key = None
 
 
-SYSTEM_PROMPT = """You are GridMind AI — a premium renewable energy analyst copilot. You provide data-driven, actionable insights for solar/wind system owners.
+SYSTEM_PROMPT = """You are Bottleneck AI — a premium renewable energy analyst copilot. You provide data-driven, actionable insights for solar/wind system owners.
 
 ## Response Format Rules
 1. ALWAYS use markdown formatting: headers (###), tables, bold, bullet points.

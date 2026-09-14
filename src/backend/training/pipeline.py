@@ -1,5 +1,5 @@
 """
-Model Training Pipeline for GridMind AI
+Model Training Pipeline for Bottleneck AI
 Supports: Solar Hybrid (pvlib + XGBoost), Wind LightGBM, Quantile models
 """
 import os

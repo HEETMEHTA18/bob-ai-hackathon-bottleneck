@@ -1,11 +1,11 @@
 """
-Unsloth vs Cloud Fine-tuning Analysis for GridMind AI
+Unsloth vs Cloud Fine-tuning Analysis for Bottleneck AI
 """
 import json
 from pathlib import Path
 
 ANALYSIS = {
-    "project": "GridMind AI",
+    "project": "Bottleneck AI",
     "task": "Time-series forecasting (solar/wind generation)",
     "models": {
         "current": {
@@ -22,7 +22,7 @@ ANALYSIS = {
         "what_is_unsloth": "Unsloth is a library for fast LLM fine-tuning (Llama, Mistral, etc.)",
         "applicability": "NOT RECOMMENDED for this project",
         "reasons": [
-            "GridMind uses tabular ML (XGBoost/LightGBM), not LLMs",
+            "Bottleneck uses tabular ML (XGBoost/LightGBM), not LLMs",
             "Unsloth is designed for text/language models, not time-series",
             "Time-series forecasting doesn't benefit from LLM fine-tuning",
             "XGBoost/LightGBM are 10-100x faster for this task",

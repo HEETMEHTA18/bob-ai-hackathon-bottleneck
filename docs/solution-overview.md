@@ -1,12 +1,12 @@
-# Solution Overview — GridShield AI
+# Solution Overview — Bottleneck AI
 
 ## IBM Bob Hackathon 2026 — Track U1
 
 ---
 
-## What GridShield Does
+## What Bottleneck Does
 
-GridShield is a software-first AI-powered grid reliability platform.
+Bottleneck is a software-first AI-powered grid reliability platform.
 
 It takes **three inputs**:
 - Asset telemetry (transformer temperature, vibration, load, voltage, partial discharge)
@@ -29,7 +29,7 @@ Core product story: **PREDICT → EXPLAIN → PRIORITIZE → POSITION**
 
 Most failure prediction systems rank by probability alone.
 
-GridShield computes a **composite risk score**:
+Bottleneck computes a **composite risk score**:
 
 ```
 Risk = f(failure_probability × grid_impact × weather_exposure × criticality × (1 − redundancy))
@@ -91,7 +91,7 @@ Asset Telemetry (synthetic / future IoT)
             ↓
    Maintenance Prioritization   +   Crew Pre-Positioning
             ↓
-  GridShield Command Center (React / TypeScript frontend)
+  Bottleneck Command Center (React / TypeScript frontend)
 ```
 
 ---
@@ -111,18 +111,18 @@ Asset Telemetry (synthetic / future IoT)
 
 ## Technical Foundation
 
-Built on **Gridkavach** (Gridkavach renewable-energy forecasting platform):
+Built on **Bottleneck** (Bottleneck renewable-energy forecasting platform):
 
 | Component | Reuse Status |
 |-----------|-------------|
 | FastAPI app structure, middleware, CORS | ✅ Kept |
 | Open-Meteo weather provider | ✅ Adapted → asset exposure scores |
 | Gemini copilot infrastructure | ✅ Adapted → Grid Operations Advisor |
-| React 18 + TypeScript + Vite frontend | ✅ Adapted — GridShield pages added |
+| React 18 + TypeScript + Vite frontend | ✅ Adapted — Bottleneck pages added |
 | Auth system, Docker, deployment configs | ✅ Kept |
 | Solar/wind forecasting | ⚠️ Preserved, not primary UX |
 
-All new GridShield functionality lives under `backend/gridshield/` and `frontend/src/components/gridshield/`.
+All new Bottleneck functionality lives under `backend/bottleneck/` and `frontend/src/components/bottleneck/`.
 
 ---
 

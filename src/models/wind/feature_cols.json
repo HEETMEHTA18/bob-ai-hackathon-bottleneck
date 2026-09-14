@@ -1,0 +1,18 @@
+[
+  "wind_speed_10m",
+  "wind_speed_100m",
+  "wind_gusts_10m",
+  "wind_dir_sin",
+  "wind_dir_cos",
+  "air_density",
+  "temperature_2m",
+  "surface_pressure",
+  "hour_sin",
+  "hour_cos",
+  "month_sin",
+  "month_cos",
+  "day_of_year_sin",
+  "day_of_year_cos",
+  "wind_speed_rolling_3h",
+  "wind_speed_rolling_6h"
+]

@@ -1,4 +1,4 @@
-# Contributing to GridShield AI
+# Contributing to Bottleneck AI
 
 ## IBM Bob Hackathon 2026 — U1: Power Outage Prediction & Grid Equipment Failure Advisor
 
@@ -7,8 +7,8 @@
 ## Repository Layout
 
 ```
-backend/          FastAPI backend (GridShield modules + legacy Gridkavach)
-  gridshield/     All new GridShield modules
+backend/          FastAPI backend (Bottleneck modules + legacy Bottleneck)
+  bottleneck/     All new Bottleneck modules
     contracts.py      Pydantic data contracts (stable integration seam)
     mock_data.py      30-asset deterministic synthetic fleet
     ml_adapter.py     MockFailurePredictor + FailurePredictor ABC
@@ -20,8 +20,9 @@ backend/          FastAPI backend (GridShield modules + legacy Gridkavach)
     routes.py         All 16 /api/gs/* endpoints
 frontend/         React 18 + TypeScript frontend
   src/
-    api/gridshield.ts           TypeScript API client
-    components/gridshield/      6 GridShield pages
+    api/bottleneck.ts           TypeScript API client
+    components/bottleneck/      6 Bottleneck pages
+tests/            Pytest test suite
 docs/             Architecture, PRD, TRD, MODEL, DATA, setup guide
 ```
 
@@ -46,14 +47,21 @@ The key design decision is the `MockFailurePredictor → RealFailurePredictor` s
 
 When the real ML pipeline is ready:
 
-1. Open `backend/gridshield/ml_adapter.py`
+1. Open `backend/bottleneck/ml_adapter.py`
 2. Implement `RealFailurePredictor(FailurePredictor)` — same `predict()` signature
-3. Set `GRIDSHIELD_USE_REAL_ML=1` in `.env`
+3. Set `BOTTLENECK_USE_REAL_ML=1` in `.env`
 4. No other changes needed — the risk engine, frontend, and tests remain intact
 
-The `FailurePrediction` contract in `backend/gridshield/contracts.py` is stable.
+The `FailurePrediction` contract in `backend/bottleneck/contracts.py` is stable.
 
 ---
+
+## Running Tests
+
+```bash
+python3 -m pytest tests/test_bottleneck.py -v
+# 44 tests — all must pass before any PR
+```
 
 ## Frontend Build
 

@@ -1,5 +1,5 @@
 """
-Build a real training dataset for the GridMind solar forecaster.
+Build a real training dataset for the Bottleneck solar forecaster.
 
 Pipeline:
   1. Pull historical hourly weather from the Open-Meteo archive (free, no key)
@@ -74,7 +74,7 @@ def _fetch_archive(latitude, longitude, start_date, end_date, base, month_limit)
         "timezone": "Asia/Kolkata",
     }
     url = f"{base}?{urllib.parse.urlencode(params)}"
-    req = urllib.request.Request(url, headers={"User-Agent": "GridMind-AI/2.0"})
+    req = urllib.request.Request(url, headers={"User-Agent": "Bottleneck-AI/2.0"})
     with urllib.request.urlopen(req, context=_ssl_ctx(), timeout=60) as resp:
         data = json.loads(resp.read().decode())
 
@@ -166,7 +166,7 @@ def build_training_dataset(site_params, start_date, end_date, out_name="solar_ge
 
 
 if __name__ == "__main__":
-    p = argparse.ArgumentParser(description="Build GridMind solar training dataset")
+    p = argparse.ArgumentParser(description="Build Bottleneck solar training dataset")
     p.add_argument("--start", default="2023-01-01", help="UTC start date (YYYY-MM-DD)")
     p.add_argument("--end", default="2024-12-31", help="UTC end date (YYYY-MM-DD)")
     p.add_argument("--lat", type=float, default=DEFAULT_SITE["latitude"])

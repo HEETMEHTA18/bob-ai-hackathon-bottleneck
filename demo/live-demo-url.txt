@@ -1,6 +1,6 @@
 NOT DEPLOYED
 
-GridShield runs locally. See docs/setup-guide.md for step-by-step instructions.
+Bottleneck runs locally. See docs/setup-guide.md for step-by-step instructions.
 
 Quick start:
   pip install -r requirements.txt

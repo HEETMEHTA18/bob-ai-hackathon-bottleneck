@@ -1,7 +1,7 @@
-# GridShield AI — Product Requirements Document
+# Bottleneck AI — Product Requirements Document
 
 ## Product
-GridShield AI is a decision-support platform for power-grid asset reliability.
+Bottleneck AI is a decision-support platform for power-grid asset reliability.
 
 ## Users
 - Grid operations managers

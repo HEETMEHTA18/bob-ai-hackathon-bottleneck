@@ -94,7 +94,7 @@ function WelcomeScreen({ onSend }: { onSend: (msg: string) => void }) {
         <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#1a73e8] text-white shadow-lg shadow-[#1a73e8]/25">
           <Zap className="h-6 w-6" />
         </div>
-        <h1 className="text-[28px] font-bold text-[#202124]">GridMind AI Copilot</h1>
+        <h1 className="text-[28px] font-bold text-[#202124]">Bottleneck AI Copilot</h1>
         <p className="mt-1 text-[15px] text-[#5f6368]">Your renewable energy intelligence assistant</p>
       </motion.div>
       <div className="grid w-full max-w-lg grid-cols-2 gap-3">
@@ -126,7 +126,7 @@ function getSmartResponse(query: string): string {
   if (has("weather", "temperature", "wind", "ghi", "cloud"))
     return "Live weather requires backend connection.";
   if (has("hello", "hey", "help"))
-    return "Hi! I'm your GridMind copilot. I can help with generation forecasts, curtailment risk, battery dispatch, weather analysis, and model accuracy. What would you like to explore?";
+    return "Hi! I'm your Bottleneck copilot. I can help with generation forecasts, curtailment risk, battery dispatch, weather analysis, and model accuracy. What would you like to explore?";
   return `I can help with forecasts, risk, battery, weather, or model accuracy. Could you rephrase your question?`;
 }
 
@@ -193,7 +193,7 @@ export function AIAssistantInterface({ embed = false }: { embed?: boolean }) {
         search: searchEnabled,
         deep_research: deepResearchEnabled,
         reason: reasonEnabled,
-        site_id: (window as any).__GRIDMIND_SITE__?.id,
+        site_id: (window as any).__BOTTLENECK_SITE__?.id,
       });
       setThinking(false);
       setMessages((prev) => [...prev, r.data.message]);
@@ -281,7 +281,7 @@ export function AIAssistantInterface({ embed = false }: { embed?: boolean }) {
             </button>
           </div>
           <p className="mt-2 text-center text-[11px] text-[#9aa0a6]">
-            GridMind AI · Renewable energy intelligence · Data from Open-Meteo
+            Bottleneck AI · Renewable energy intelligence · Data from Open-Meteo
           </p>
         </div>
       </div>
