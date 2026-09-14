@@ -580,8 +580,8 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                 View demo walkthrough
               </Button>
             </div>
-            <p className="mt-6 text-xs text-blue-200">
-              Demo credentials: <span className="font-mono text-white" style={{ fontFamily: "'JetBrains Mono', monospace" }}>demo@gridshield.ai / demo1234</span>
+            <p className="mt-6 text-xs text-blue-200/60">
+              For demo access, use the pre-seeded account
             </p>
           </div>
         </div>
@@ -631,13 +631,13 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
               <div className="mb-5 rounded-xl border border-blue-600/15 bg-blue-50 px-4 py-3 text-xs text-blue-700">
                 <div className="mb-2 font-medium">Quick Demo Access</div>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="font-mono" style={{ fontFamily: "'JetBrains Mono', monospace" }}>demo@gridshield.ai / demo1234</span>
+                  <span className="font-mono text-blue-600/70" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Pre-seeded demo account</span>
                   <button
                     type="button"
                     className="shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm hover:bg-blue-700"
                     onClick={() => setDemoFill(f => !f)}
                   >
-                    {demoFill ? "Filled ✓" : "Auto-fill"}
+                    {demoFill ? "Clear" : "Auto-fill"}
                   </button>
                 </div>
               </div>

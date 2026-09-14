@@ -1,7 +1,9 @@
 import axios from 'axios'
 
+const API_BASE = import.meta.env.VITE_API_BASE || ''
+
 const api = axios.create({
-  baseURL: '',
+  baseURL: API_BASE,
   timeout: 30000,
 })
 
@@ -20,7 +22,7 @@ api.interceptors.response.use(
       const refreshToken = localStorage.getItem('refresh_token')
       if (refreshToken) {
         try {
-          const res = await axios.post('/auth/refresh', { refresh_token: refreshToken })
+          const res = await axios.post(`${API_BASE}/auth/refresh`, { refresh_token: refreshToken })
           localStorage.setItem('access_token', res.data.access_token)
           localStorage.setItem('refresh_token', res.data.refresh_token)
           error.config.headers.Authorization = `Bearer ${res.data.access_token}`
@@ -36,25 +38,13 @@ api.interceptors.response.use(
   }
 )
 
+// ─── Auth ─────────────────────────────────────────────────────
 export interface User {
   id: string
   email: string
   full_name: string
   company_name?: string
   role: string
-}
-
-export interface Site {
-  id: string
-  name: string
-  site_type: string
-  latitude: number
-  longitude: number
-  altitude?: number
-  capacity_kw: number
-  battery_capacity_kwh: number
-  export_limit_kw: number
-  is_active: boolean
 }
 
 export interface TokenResponse {
@@ -71,46 +61,6 @@ export const login = (data: { email: string; password: string }) =>
   api.post<TokenResponse>('/auth/login', data)
 
 export const getMe = () => api.get<User>('/auth/me')
-
-export const createSite = (data: Partial<Site>) => api.post<Site>('/sites/', data)
-export const listSites = () => api.get<Site[]>('/sites/')
-export const deleteSite = (id: string) => api.delete(`/sites/${id}`)
-
-export const uploadCSV = (siteId: string, file: File) => {
-  const form = new FormData()
-  form.append('file', file)
-  return api.post(`/sites/${siteId}/upload`, form)
-}
-
-export const getForecast = (siteId: string, horizon = 24) =>
-  api.get(`/api/forecast/${siteId}`, { params: { horizon } })
-
-export const getRisk = (siteId: string, horizon = 24) =>
-  api.get(`/api/risk/${siteId}`, { params: { horizon } })
-
-export const getOptimize = (siteId: string, horizon = 24) =>
-  api.get(`/api/optimize/${siteId}`, { params: { horizon } })
-
-export const getExplain = (siteId: string) =>
-  api.get(`/api/explain/${siteId}`)
-
-export const runScenario = (siteId: string, params: {
-  cloud_cover_delta?: number
-  wind_speed_delta?: number
-  battery_soc_override?: number
-}) => api.post(`/api/scenario/${siteId}`, params)
-
-export const getDataStatus = (siteId: string) =>
-  api.get(`/api/data/status/${siteId}`)
-
-export const syncWeatherData = (siteId: string) =>
-  api.post(`/api/data/sync/${siteId}`)
-
-export const importCSV = (siteId: string, file: File) => {
-  const form = new FormData()
-  form.append('file', file)
-  return api.post(`/api/data/import/${siteId}`, form)
-}
 
 // ─── Chat / Sessions ─────────────────────────────────────────
 export interface ChatSession {
@@ -147,87 +97,5 @@ export const sendChatMessage = (sessionId: string, message: string, options?: { 
 
 export const deleteChatSession = (sessionId: string) =>
   api.delete(`/api/chat/sessions/${sessionId}`)
-
-export interface AccuracySeries {
-  horizon_hours: number
-  MAE: number
-  RMSE: number
-  'MAPE_%': number
-  R2: number
-  'rel_%': number
-}
-
-export interface ForecastAccuracy {
-  site_id: string
-  capacity_kw: number
-  overall: {
-    MAE: number
-    RMSE: number
-    'MAPE_%': number
-    R2: number
-    'reliability_%': number
-  }
-  horizons: AccuracySeries[]
-}
-
-export interface AlertItem {
-  id: string
-  severity: 'critical' | 'warning' | 'info'
-  type: string
-  title: string
-  detail: string
-  time: string
-  channels: string[]
-}
-
-export interface ModelHealth {
-  model_name: string
-  version: string
-  algorithm: string
-  mae_mw: number
-  data_drift: 'LOW' | 'MEDIUM' | 'HIGH'
-  model_drift: 'LOW' | 'MEDIUM' | 'HIGH'
-  last_trained: string
-  hours_since_training: number
-  feature_version: string
-  status: 'HEALTHY' | 'ATTENTION'
-}
-
-export interface WeatherInsights {
-  site_id: string
-  source: string
-  primary_driver: string
-  weather: {
-    max_cloud_cover: number
-    peak_temperature: number
-    avg_wind_speed: number
-  }
-  impact: {
-    'irradiance_reduction_%': number
-    'temperature_derating_%': number
-    'wind_boost_%': number
-    'generation_reduction_kw': number
-  }
-  drivers: { key: string; label: string; level: string; value: string }[]
-  data: {
-    'quality_%': number
-    records: number
-    high_severity_anomalies: number
-    last_updated_minutes_ago: number | null
-    stale: boolean
-  }
-}
-
-export const getForecastAccuracy = (siteId: string) =>
-  api.get<ForecastAccuracy>(`/api/insights/${siteId}/accuracy`)
-
-export const getModelHealth = () =>
-  api.get<ModelHealth>('/api/insights/model')
-
-export const getAlerts = () =>
-  api.get<{ alerts: AlertItem[] }>('/api/alerts')
-
-export const getWeatherInsights = (siteId: string) =>
-  api.get<WeatherInsights>(`/api/insights/${siteId}/weather`)
 
 export default api

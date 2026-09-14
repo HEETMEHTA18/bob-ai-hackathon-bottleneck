@@ -3,7 +3,7 @@
  * Uses the existing CSS design system: .card, .kpi-card, .badge, .btn, etc.
  */
 import React, { useState, useEffect } from 'react'
-import { gsGetKPIs, gsGetRiskRanking, gsGetAlerts, type GSKPIs, type GSRankingEntry, type GSAlert } from '../../api/gridshield'
+import { gsGetKPIs, gsGetRiskRanking, gsGetAlerts, gsGetMLStatus, type GSKPIs, type GSRankingEntry, type GSAlert, type GSMLStatus } from '../../api/gridshield'
 import { riskBadgeClass, riskTextColor, riskBarColor, riskAccentStyle, priorityBadgeClass, assetTypeIcon, assetTypeLabel, pct, statusColor, RED, AMBER, GREEN, ACCENT, MUTED } from './utils'
 import { AlertTriangle, Activity, Users, Zap, Shield, TrendingUp } from 'lucide-react'
 
@@ -15,6 +15,7 @@ export default function CommandCenter({ onSelectAsset }: CommandCenterProps) {
   const [kpis, setKpis]       = useState<GSKPIs | null>(null)
   const [ranking, setRanking] = useState<GSRankingEntry[]>([])
   const [alerts, setAlerts]   = useState<GSAlert[]>([])
+  const [mlStatus, setMlStatus] = useState<GSMLStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]     = useState<string | null>(null)
   const [filter, setFilter]   = useState<string>('all')
@@ -28,8 +29,8 @@ export default function CommandCenter({ onSelectAsset }: CommandCenterProps) {
   async function load() {
     try {
       setLoading(true)
-      const [k, r, a] = await Promise.all([gsGetKPIs(), gsGetRiskRanking(), gsGetAlerts()])
-      setKpis(k.data); setRanking(r.data.ranking); setAlerts(a.data.alerts)
+      const [k, r, a, ml] = await Promise.all([gsGetKPIs(), gsGetRiskRanking(), gsGetAlerts(), gsGetMLStatus()])
+      setKpis(k.data); setRanking(r.data.ranking); setAlerts(a.data.alerts); setMlStatus(ml.data)
     } catch (e: any) { setError(e.message) }
     finally { setLoading(false) }
   }
@@ -64,7 +65,20 @@ export default function CommandCenter({ onSelectAsset }: CommandCenterProps) {
             </span>}
           </div>
         </div>
-        <span className="badge badge-green"><span className="status-dot" />LIVE</span>
+        <div className="flex gap-2 items-center">
+          {mlStatus && (
+            <span className="badge" style={{
+              background: mlStatus.mode === 'real_ml' ? '#dcfce7' : '#fef3c7',
+              color: mlStatus.mode === 'real_ml' ? '#166534' : '#92400e',
+              fontSize: 11,
+              padding: '4px 8px',
+            }}>
+              {mlStatus.mode === 'real_ml' ? 'ML: XGBoost' : 'ML: Mock'}
+              {mlStatus.model_version && <span style={{ marginLeft: 4, opacity: 0.7 }}>({mlStatus.model_version})</span>}
+            </span>
+          )}
+          <span className="badge badge-green"><span className="status-dot" />LIVE</span>
+        </div>
       </div>
 
       {/* KPI Cards */}

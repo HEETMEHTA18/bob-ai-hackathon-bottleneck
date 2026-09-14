@@ -43,17 +43,41 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
-def verify_ws_token(token: str) -> str:
+async def verify_ws_token(token: str) -> str:
+    """Validate WebSocket token with full security checks."""
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        return payload.get("sub")
     except JWTError:
         return None
 
-async def websocket_endpoint(websocket: WebSocket, token: str, site_id: str):
-    user_id = verify_ws_token(token)
+    # Must be an access token
+    if payload.get("type") != "access":
+        return None
+
+    user_id = payload.get("sub")
     if not user_id:
-        await websocket.close(code=4001, reason="Invalid token")
+        return None
+
+    # Verify user exists and is active
+    try:
+        from backend.database import get_db
+        from backend.models_db import User
+        from sqlalchemy import select
+        async for db in get_db():
+            result = await db.execute(select(User).where(User.id == user_id, User.is_active == True))
+            user = result.scalar_one_or_none()
+            if not user:
+                return None
+            break
+    except Exception:
+        return None
+
+    return user_id
+
+async def websocket_endpoint(websocket: WebSocket, token: str, site_id: str):
+    user_id = await verify_ws_token(token)
+    if not user_id:
+        await websocket.close(code=4001, reason="Invalid or expired token")
         return
 
     await manager.connect(websocket, user_id, site_id)

@@ -6,16 +6,19 @@
  * GridShield is now the primary UX.
  * 
  * Navigation:
- *   Command Center → Asset Intelligence → Maintenance Planner → Crew Planner
- *   → Scenario Simulator → AI Copilot
+ *   Command Center → Grid Map → Maintenance Planner → Crew Planner
+ *   → Scenario Simulator → AI Copilot → Hardware Settings
  */
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
+import { ShieldAlert, Map, Wrench, Truck, CloudLightning, Bot, Settings, ChevronLeft, ChevronRight } from 'lucide-react'
 import CommandCenter from './CommandCenter'
 import AssetIntelligence from './AssetIntelligence'
 import MaintenancePlanner from './MaintenancePlanner'
 import CrewPlanner from './CrewPlanner'
 import ScenarioSimulator from './ScenarioSimulator'
 import GridShieldCopilot from './Copilot'
+import GridMap from './GridMap'
+import SettingsPage from './Settings'
 
 type GSPage =
   | { id: 'dashboard' }
@@ -24,13 +27,17 @@ type GSPage =
   | { id: 'crew' }
   | { id: 'scenarios' }
   | { id: 'copilot' }
+  | { id: 'map' }
+  | { id: 'settings' }
 
-const NAV_ITEMS = [
-  { id: 'dashboard',   label: 'Command Center', icon: '🛡️' },
-  { id: 'maintenance', label: 'Maintenance',    icon: '🔧' },
-  { id: 'crew',        label: 'Crew Planner',   icon: '🚒' },
-  { id: 'scenarios',   label: 'Scenarios',      icon: '⛈' },
-  { id: 'copilot',     label: 'AI Copilot',     icon: '🤖' },
+const NAV_ITEMS: Array<{ id: GSPage['id']; label: string; icon: ReactNode }> = [
+  { id: 'dashboard',   label: 'Command Center', icon: <ShieldAlert size={18} /> },
+  { id: 'map',         label: 'Grid Map',       icon: <Map size={18} /> },
+  { id: 'maintenance', label: 'Maintenance',    icon: <Wrench size={18} /> },
+  { id: 'crew',        label: 'Crew Planner',   icon: <Truck size={18} /> },
+  { id: 'scenarios',   label: 'Scenarios',      icon: <CloudLightning size={18} /> },
+  { id: 'copilot',     label: 'AI Copilot',     icon: <Bot size={18} /> },
+  { id: 'settings',    label: 'Settings',       icon: <Settings size={18} /> },
 ]
 
 export default function GridShieldApp() {
@@ -52,7 +59,7 @@ export default function GridShieldApp() {
         {/* Logo */}
         <div className="p-4 border-b border-gray-800 flex items-center gap-3">
           <div className="w-7 h-7 bg-blue-600 rounded-md flex items-center justify-center text-sm flex-shrink-0">
-            🛡️
+            <ShieldAlert size={16} className="text-white" />
           </div>
           {sidebarOpen && (
             <div className="min-w-0">
@@ -64,7 +71,11 @@ export default function GridShieldApp() {
             className={`${sidebarOpen ? 'ml-auto' : 'mx-auto'} text-gray-500 hover:text-gray-300 text-sm`}
             onClick={() => setSidebarOpen(!sidebarOpen)}
           >
-            {sidebarOpen ? '◂' : '▸'}
+            {sidebarOpen ? (
+              <ChevronLeft size={16} />
+            ) : (
+              <ChevronRight size={16} />
+            )}
           </button>
         </div>
 
@@ -122,6 +133,12 @@ export default function GridShieldApp() {
           )}
           {page.id === 'copilot' && (
             <GridShieldCopilot />
+          )}
+          {page.id === 'map' && (
+            <GridMap onAssetSelect={goToAsset} />
+          )}
+          {page.id === 'settings' && (
+            <SettingsPage />
           )}
         </div>
       </main>

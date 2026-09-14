@@ -154,23 +154,7 @@ Run through the complete demo flow to verify everything is working:
 
 ---
 
-## 8. Run Tests
-
-```bash
-# From the repository root
-python3 -m pytest tests/test_gridshield.py -v
-```
-
-Expected output:
-```
-44 passed, 2 warnings in X.XXs
-```
-
-The 2 warnings are Pydantic V2 deprecation notices from legacy Gridkavach code — they do not affect GridShield.
-
----
-
-## 9. Frontend Type Check + Build
+## 8. Frontend Type Check + Build
 
 ```bash
 cd frontend

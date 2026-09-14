@@ -156,6 +156,8 @@ class Crew(BaseModel):
     region: str
     availability: Literal["available", "busy", "offline"]
     capacity: int                           # number of jobs concurrently
+    lat: Optional[float] = None             # depot base location
+    lon: Optional[float] = None
 
 
 class CrewAssignment(BaseModel):
@@ -165,6 +167,21 @@ class CrewAssignment(BaseModel):
     priority: int
     reason: str
     eta_hours: float
+
+
+class NearbyCrew(BaseModel):
+    crew: Crew
+    distance_km: float
+    eta_hours: float
+    specialty_match: bool
+
+
+class CrewAssignmentConfirm(BaseModel):
+    crew: Crew
+    distance_km: float
+    eta_hours: float
+    assignment: Literal["Pre-position", "Dispatch", "Standby"]
+    reason: str
 
 
 # ── Scenario ──────────────────────────────────────────────────────────────────
@@ -196,6 +213,53 @@ class RiskRankingEntry(BaseModel):
     grid_impact: GridImpact
     weather: WeatherExposure
     maintenance: MaintenanceRecommendation
+
+
+# ── Hardware Integration ────────────────────────────────────────────────────────
+
+class HardwareConnection(BaseModel):
+    host: Optional[str] = None
+    port: Optional[int] = None
+    unit_id: Optional[int] = None
+    baud_rate: Optional[int] = None
+    serial_port: Optional[str] = None
+    topic: Optional[str] = None
+    endpoint: Optional[str] = None
+    auth_username: Optional[str] = None
+    auth_password: Optional[str] = None
+
+
+class HardwareRegister(BaseModel):
+    name: str
+    address: int
+    register_type: Literal["holding", "input", "coil", "discrete"]
+    data_type: Literal["uint16", "int16", "uint32", "int32", "float32", "float64", "bool"]
+    scale: float = 1.0
+    offset: float = 0.0
+    unit: str
+    telemetry_field: Literal[
+        "oil_temperature", "load_percentage", "vibration",
+        "current_unbalance", "voltage_deviation", "partial_discharge", "ambient_temperature"
+    ]
+
+
+class HardwareConfig(BaseModel):
+    asset_id: str
+    device_type: Literal["dtc", "smart_sensor", "pmcu", "rtu", "custom"]
+    protocol: Literal["modbus", "modbus_tcp", "dnp3", "iec61850", "mqtt", "opcua", "http"]
+    connection: HardwareConnection
+    registers: List[HardwareRegister]
+    poll_interval_seconds: int = 60
+    enabled: bool = False
+    last_sync: Optional[datetime] = None
+    status: Literal["connected", "disconnected", "error", "configuring"] = "disconnected"
+
+
+class HardwareReading(BaseModel):
+    asset_id: str
+    timestamp: datetime
+    readings: dict
+    quality: Literal["good", "uncertain", "bad"] = "good"
 
 
 class DashboardKPIs(BaseModel):

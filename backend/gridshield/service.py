@@ -22,6 +22,17 @@ from backend.gridshield.risk_engine import (
     compute_risk, build_maintenance_recommendation, assign_crew,
 )
 from datetime import datetime
+import time as _time
+
+# ─── Ranking cache (TTL) ──────────────────────────────────────────────────────
+# Full ranking over 30 assets runs XGBoost inference per asset (~2-3s cold).
+# Cache per scenario so dashboard polls + chatbot + KPIs share one computation.
+_RANKING_CACHE: dict[str, tuple[float, list]] = {}
+_RANKING_TTL_SECONDS = 60.0
+
+
+def invalidate_ranking_cache() -> None:
+    _RANKING_CACHE.clear()
 
 
 def _compute_for_asset(
@@ -49,7 +60,12 @@ def _compute_for_asset(
 
 
 def get_full_ranking(scenario: Optional[str] = None) -> List[RiskRankingEntry]:
-    """Compute ranked risk assessment for all assets."""
+    """Compute ranked risk assessment for all assets (cached, TTL 60s)."""
+    cache_key = scenario or "__base__"
+    cached = _RANKING_CACHE.get(cache_key)
+    if cached and (_time.time() - cached[0]) < _RANKING_TTL_SECONDS:
+        return cached[1]
+
     entries = []
     available_crews = list(CREWS)
 
@@ -83,6 +99,7 @@ def get_full_ranking(scenario: Optional[str] = None) -> List[RiskRankingEntry]:
             maintenance=maint,
         ))
 
+    _RANKING_CACHE[cache_key] = (_time.time(), entries)
     return entries
 
 

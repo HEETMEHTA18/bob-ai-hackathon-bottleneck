@@ -15,7 +15,6 @@ src/
   risk/
   optimization/
   data/
-tests/
 docs/
 bob_sessions/
 ```

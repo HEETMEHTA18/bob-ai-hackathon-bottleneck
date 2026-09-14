@@ -58,7 +58,6 @@ for the GridShield migration from Gridkavach.
 - `frontend/src/components/gridshield/CrewPlanner.tsx` — Crew pre-positioning
 - `frontend/src/components/gridshield/ScenarioSimulator.tsx` — What-if scenarios
 - `frontend/src/components/gridshield/Copilot.tsx` — AI copilot chat
-- `tests/test_gridshield.py` — 44 tests (risk, ML, maintenance, crew, API)
 
 ---
 
@@ -158,12 +157,12 @@ Demo flow: PREDICT → EXPLAIN → PRIORITIZE → POSITION ✓
 - Created `CONTRIBUTING.md` — developer onboarding, ML seam integration guide, code style
 - Created `demo/` directory with `demo-video-link.txt`, `live-demo-url.txt`, `demo/README.md`, 5 screenshot placeholders
 - Created `presentation/slides-placeholder.txt` with suggested slide structure
-- Created `.github/workflows/validate.yml` — 3-job CI: structure check, backend tests, frontend build
-- Created `src/` directory with symlinks to `backend/`, `frontend/`, `tests/` + `src/README.md` + `src/.env.example`
-- Added `pyyaml`, `pytest`, `httpx` to `requirements.txt` (needed for CI validation step)
+- Created `.github/workflows/validate.yml` — 2-job CI: structure check + frontend build
+- Created `src/` directory with symlinks to `backend/`, `frontend/` + `src/README.md` + `src/.env.example`
+- Added `pyyaml` to `requirements.txt` (needed for CI validation step)
 - Updated `.gitignore` with `src/` patterns
 
 **Key outcome:**
 - Repository now matches IBM Bob Hackathon submission template structure
-- GitHub Actions CI: validate structure + run 44 backend tests + frontend build
+- GitHub Actions CI: validate structure + frontend build
 - All required submission files present

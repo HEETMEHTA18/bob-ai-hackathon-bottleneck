@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react'
 import { gsGetMaintenancePriorities } from '../../api/gridshield'
 import { riskBadgeClass, riskTextColor, riskBarColor, priorityBadgeClass, assetTypeIcon, assetTypeLabel, pct, RED, AMBER, GREEN, ACCENT, MUTED } from './utils'
+import { Users, Truck, Clock } from 'lucide-react'
 
 interface Props { onSelectAsset: (id: string) => void }
 
@@ -123,12 +124,12 @@ export default function MaintenancePlanner({ onSelectAsset }: Props) {
           </div>
 
           <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid #f1f3f4', display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 12, color: MUTED }}>
-            <span>⏱ {p.recommended_window}</span>
-            <span>⏳ ~{p.estimated_duration_hours}h</span>
-            <span>👥 {p.customers_at_risk.toLocaleString()} customers</span>
-            {p.critical_facilities_at_risk > 0 && <span>🏥 {p.critical_facilities_at_risk} facilities</span>}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>{p.recommended_window}</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Clock className="h-3 w-3" /> ~{p.estimated_duration_hours}h</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Users className="h-3 w-3" /> {p.customers_at_risk.toLocaleString()} customers</span>
+            {p.critical_facilities_at_risk > 0 && <span>{p.critical_facilities_at_risk} facilities at risk</span>}
             {p.assigned_crew_id
-              ? <span style={{ color: ACCENT, fontWeight: 600 }}>🚒 {p.assigned_crew_id}</span>
+              ? <span style={{ color: ACCENT, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Truck className="h-3 w-3" /> {p.assigned_crew_id}</span>
               : <span>No crew assigned</span>}
           </div>
         </div>

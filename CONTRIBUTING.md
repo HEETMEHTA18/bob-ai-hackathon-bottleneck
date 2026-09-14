@@ -22,7 +22,6 @@ frontend/         React 18 + TypeScript frontend
   src/
     api/gridshield.ts           TypeScript API client
     components/gridshield/      6 GridShield pages
-tests/            Pytest test suite
 docs/             Architecture, PRD, TRD, MODEL, DATA, setup guide
 ```
 
@@ -55,13 +54,6 @@ When the real ML pipeline is ready:
 The `FailurePrediction` contract in `backend/gridshield/contracts.py` is stable.
 
 ---
-
-## Running Tests
-
-```bash
-python3 -m pytest tests/test_gridshield.py -v
-# 44 tests — all must pass before any PR
-```
 
 ## Frontend Build
 

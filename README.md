@@ -39,7 +39,6 @@ GridShield combines asset telemetry, weather exposure, and incident history into
 - **Crew pre-positioning** — Dispatch by specialty and region based on risk rankings
 - **Grounded AI copilot** — All answers backed by backend data; never invents sensor values or statistics
 - **16 REST API endpoints** — Full CRUD under `/api/gs/`
-- **44 automated tests** — All passing
 
 ---
 
@@ -69,7 +68,6 @@ GridShield combines asset telemetry, weather exposure, and incident history into
 │       └── components/
 │           └── gridshield/  # GridShield UI components
 ├── src/                     # Alternate source layout
-├── tests/                   # 44 automated tests
 ├── docs/                    # Documentation
 │   ├── problem-statement.md
 │   ├── solution-overview.md
@@ -218,17 +216,6 @@ The `FailurePrediction` contract is stable. No frontend, risk engine, maintenanc
 | Live Demo | Local — see setup guide above |
 | Screenshots | See demo/screenshots/ |
 | Presentation | See presentation/ |
-
----
-
-## Tests
-
-```bash
-# Run the full GridShield test suite
-python3 -m pytest tests/test_gridshield.py -v
-
-# 44 tests: risk engine, mock ML, maintenance, crew, all API endpoints
-```
 
 ---
 

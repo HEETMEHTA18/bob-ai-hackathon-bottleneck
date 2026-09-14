@@ -1,251 +1,334 @@
 /**
  * GridShield — Asset Intelligence Page
- * Full detail for one asset. Uses existing CSS design system.
+ * A SINGLE map UI: full-page interactive map of the selected asset (risk zone,
+ * nearest crew depots, dispatch lines) with an overlay intelligence panel
+ * floating over the map. No dashboard — everything lives inside the map view.
  */
 import React, { useState, useEffect } from 'react'
-import { gsGetAssetIntelligence, type GSIntelligence } from '../../api/gridshield'
-import { riskBadgeClass, riskTextColor, riskBarColor, riskAccentStyle, priorityBadgeClass, assetTypeIcon, assetTypeLabel, pct, statusColor, RED, AMBER, GREEN, ACCENT, MUTED, MiniBar } from './utils'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Loader2, MapPin, PanelRightClose, PanelRightOpen, Truck, Clock, ShieldAlert, AlertTriangle } from 'lucide-react'
+import {
+  gsGetAssetIntelligence, gsGetRiskRanking, gsGetNearbyCrews, gsAssignCrew,
+  type GSIntelligence, type GSRankingEntry, type GSNearbyCrew, type GSCrewAssignResult,
+} from '../../api/gridshield'
+import {
+  riskBadgeClass, riskTextColor, priorityBadgeClass, assetTypeIcon, assetTypeLabel,
+  MiniBar, pct, statusColor, RED, AMBER, GREEN, ACCENT, MUTED,
+} from './utils'
+import { GridMapEmbedded } from './GridMap'
 
 interface Props { assetId: string; onBack: () => void }
 
+const riskLevelColors: Record<string, string> = {
+  critical: '#c5221f',
+  high: '#e8710a',
+  medium: '#eab308',
+  low: '#0d904f',
+}
+
 export default function AssetIntelligence({ assetId, onBack }: Props) {
-  const [data, setData]       = useState<GSIntelligence | null>(null)
+  const [entry, setEntry] = useState<GSRankingEntry | null>(null)
+  const [data, setData] = useState<GSIntelligence | null>(null)
+  const [nearby, setNearby] = useState<GSNearbyCrew[]>([])
+  const [assigned, setAssigned] = useState<GSCrewAssignResult | null>(null)
+  const [assigning, setAssigning] = useState<string | null>(null)
+  const [panelOpen, setPanelOpen] = useState(true)
   const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
+  const load = async () => {
     setLoading(true); setError(null)
-    gsGetAssetIntelligence(assetId)
-      .then(r => setData(r.data))
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false))
-  }, [assetId])
+    try {
+      const [intelRes, rankRes, crewRes] = await Promise.all([
+        gsGetAssetIntelligence(assetId),
+        gsGetRiskRanking(),
+        gsGetNearbyCrews(assetId, 5),
+      ])
+      const found = rankRes.data.ranking.find(e => e.asset_id === assetId)
+      if (!found) setError(`${assetId} not found in grid ranking`)
+      else setEntry(found)
+      setData(intelRes.data)
+      setNearby(crewRes.data.nearby)
+    } catch (e: any) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
-  if (loading) return (
-    <div className="empty-state">
-      <div className="empty-icon"><span style={{ fontSize: 28 }}>{assetTypeIcon('transformer')}</span></div>
-      <div className="empty-title">Loading {assetId}…</div>
-    </div>
-  )
-  if (error || !data) return (
-    <div>
-      <button className="btn btn-secondary btn-sm" style={{ marginBottom: 16 }} onClick={onBack}>
-        <ArrowLeft size={14} /> Back
-      </button>
-      <div className="card" style={{ borderLeft: `4px solid ${RED}` }}>
-        <div className="card-title" style={{ color: RED }}>Error loading {assetId}</div>
-        <p className="text-sm text-muted">{error}</p>
-      </div>
-    </div>
-  )
+  useEffect(() => { load() }, [assetId])
 
-  const { asset, risk, prediction, grid_impact, weather, maintenance_recommendation: maint, telemetry_24h, incidents, maintenance_history } = data
+  const handleAssign = async (crewId: string) => {
+    setAssigning(crewId)
+    try {
+      const res = await gsAssignCrew(assetId, crewId)
+      setAssigned(res.data)
+      setEntry(prev => prev ? { ...prev, assigned_crew: res.data.crew.crew_id } : prev)
+    } catch (e: any) {
+      setError(e.message)
+    } finally {
+      setAssigning(null)
+    }
+  }
 
-  const chartData = telemetry_24h.slice(-24).map(t => ({
-    time: new Date(t.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    'Oil Temp (°C)': t.oil_temperature,
-    'Load %': t.load_percentage,
-    'Vibration': +(t.vibration * 10).toFixed(1),
-  }))
+  const assignedCrewId = assigned?.crew.crew_id ?? entry?.assigned_crew ?? null
 
   return (
-    <div className="animate-fadeIn">
-      {/* Back + header */}
-      <div style={{ marginBottom: 20 }}>
-        <button className="btn btn-secondary btn-sm" style={{ marginBottom: 14 }} onClick={onBack}>
-          <ArrowLeft size={14} /> Back to Command Center
-        </button>
-        <div className="page-header flex-between" style={{ marginBottom: 0 }}>
-          <div>
-            <div className="page-title">
-              {assetTypeIcon(asset.asset_type)} {asset.name}
-            </div>
-            <div className="page-subtitle">
-              {asset.id} · {assetTypeLabel(asset.asset_type)} · {asset.region} Region · {asset.age_years} yrs old
-              <span style={{ marginLeft: 10 }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: statusColor(asset.status), display: 'inline-block', marginRight: 5, verticalAlign: 'middle' }} />
-                {asset.status}
-              </span>
-            </div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 36, fontWeight: 800, color: riskTextColor(risk.risk_level), lineHeight: 1 }}>
-              {risk.risk_score.toFixed(0)}<span style={{ fontSize: 16, color: MUTED }}>/100</span>
-            </div>
-            <span className={riskBadgeClass(risk.risk_level)} style={{ marginTop: 6, display: 'inline-block' }}>
-              {risk.risk_level.toUpperCase()} RISK
-            </span>
+    <div className="animate-fadeIn" style={{ position: 'relative', height: 'calc(100vh - 16px)', width: '100%', overflow: 'hidden' }}>
+      {/* Map fills the whole page */}
+      {loading ? (
+        <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8f9fa' }}>
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            <span className="text-sm text-zinc-500">Loading {assetId}…</span>
           </div>
         </div>
-      </div>
+      ) : error && !entry ? (
+        <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8f9fa' }}>
+          <div className="card" style={{ borderLeft: `4px solid ${RED}`, maxWidth: 380 }}>
+            <div className="card-title" style={{ color: RED }}>Map unavailable</div>
+            <p className="text-sm text-muted">{error}</p>
+            <button className="btn btn-secondary btn-sm" onClick={onBack}><ArrowLeft size={14} /> Back</button>
+          </div>
+        </div>
+      ) : entry && (
+        <GridMapEmbedded
+          riskEntry={entry}
+          nearby={nearby}
+          assignedCrewId={assignedCrewId}
+          onAssign={handleAssign}
+          onRefresh={load}
+        />
+      )}
 
-      {/* 4 headline metrics */}
-      <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(4,1fr)', marginBottom: 24 }}>
-        <MetricCard label="24h Failure Prob" value={pct(risk.failure_probability_24h)} color={risk.failure_probability_24h >= 0.7 ? RED : risk.failure_probability_24h >= 0.4 ? AMBER : GREEN} />
-        <MetricCard label="72h Failure Prob" value={pct(risk.failure_probability_72h)} color={risk.failure_probability_72h >= 0.8 ? RED : risk.failure_probability_72h >= 0.5 ? AMBER : GREEN} />
-        <MetricCard label="Health Score" value={`${risk.health_score.toFixed(0)}/100`} color={risk.health_score <= 50 ? RED : risk.health_score <= 70 ? AMBER : GREEN} />
-        <MetricCard label="Anomaly Score" value={risk.anomaly_score.toFixed(2)} color={risk.anomaly_score >= 0.7 ? RED : risk.anomaly_score >= 0.4 ? AMBER : GREEN} />
-      </div>
+      {/* Floating top bar — back + identity + risk */}
+      {entry && (
+        <div style={{ position: 'absolute', top: 14, left: 14, zIndex: 1000, display: 'flex', alignItems: 'center', gap: 12, padding: '8px 14px', background: 'rgba(255,255,255,0.95)', borderRadius: 10, border: '1px solid #e0e0e0', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', maxWidth: 'calc(100% - 420px)' }}>
+          <button className="btn btn-secondary btn-sm" onClick={onBack}>
+            <ArrowLeft size={14} /> Back
+          </button>
+          <div style={{ width: 12, height: 12, borderRadius: '50%', background: riskLevelColors[entry.risk_level], border: '2px solid #fff', boxShadow: '0 1px 2px rgba(0,0,0,0.25)', flexShrink: 0 }} />
+          <div style={{ fontWeight: 700, fontSize: 14, color: '#202124', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{entry.asset_name}</div>
+          <div style={{ fontSize: 12, color: MUTED, whiteSpace: 'nowrap' }}>{entry.asset_id} · {entry.region}</div>
+          <span className={riskBadgeClass(entry.risk_level)} style={{ fontSize: 10 }}>{entry.risk_level.toUpperCase()}</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: riskLevelColors[entry.risk_level] }}>{entry.risk_score.toFixed(0)}/100</span>
+          <span style={{ fontSize: 11, color: MUTED, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <MapPin className="h-3 w-3" /> {entry.asset_lat.toFixed(4)}, {entry.asset_lon.toFixed(4)}
+          </span>
+        </div>
+      )}
 
-      <div className="grid-2" style={{ gridTemplateColumns: '1fr 2fr', alignItems: 'start' }}>
-        {/* Left column */}
-        <div>
-          {/* Risk breakdown */}
-          <div className="card">
-            <div className="card-title">Risk Breakdown</div>
-            {[
-              { label: 'Failure Probability', v: risk.failure_probability_24h },
-              { label: 'Grid Impact', v: risk.grid_impact_score },
-              { label: 'Weather Exposure', v: risk.weather_exposure_score },
-              { label: 'Criticality', v: risk.criticality_score },
-              { label: 'Lack of Redundancy', v: 1 - risk.redundancy_score },
-            ].map(({ label, v }) => (
-              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                <span style={{ width: 130, fontSize: 13, color: MUTED, flexShrink: 0 }}>{label}</span>
-                <MiniBar value={v} />
-                <span style={{ fontSize: 13, fontWeight: 600, color: '#202124', width: 34, textAlign: 'right' }}>{(v * 100).toFixed(0)}%</span>
+      {/* Intelligence overlay panel — map stays the only screen */}
+      {entry && data && panelOpen && (
+        <div className="card" style={{
+          position: 'absolute', top: 14, right: 14, bottom: 14, zIndex: 1000, width: 400, maxWidth: '92vw',
+          display: 'flex', flexDirection: 'column', padding: 0, boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+        }}>
+          {/* Panel header */}
+          <div style={{ padding: '14px 16px', borderBottom: '1px solid #e0e0e0', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: 16, color: '#202124', display: 'flex', alignItems: 'center', gap: 8 }}>
+                {assetTypeIcon(data.asset.asset_type)} {assetTypeLabel(data.asset.asset_type)} Intelligence
               </div>
-            ))}
+              <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>
+                {data.asset.name} <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: statusColor(data.asset.status), margin: '0 4px 1px', verticalAlign: 'middle' }} /> {data.asset.status}
+              </div>
+            </div>
+            <button onClick={() => setPanelOpen(false)} className="btn btn-ghost btn-sm" title="Collapse panel" style={{ marginLeft: 'auto', flexShrink: 0 }}>
+              <PanelRightClose className="h-4 w-4" />
+            </button>
           </div>
 
-          {/* Why risky */}
-          <div className="card">
-            <div className="card-title">Why Risky</div>
-            <ul style={{ listStyle: 'none', padding: 0 }}>
-              {risk.top_factors.map((f, i) => (
-                <li key={i} style={{ display: 'flex', gap: 8, marginBottom: 8, fontSize: 13 }}>
-                  <span style={{ color: RED, flexShrink: 0, marginTop: 2 }}>▸</span>
+          {/* Scrollable content */}
+          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 16 }}>
+            {/* Top risk strip */}
+            <div style={{ display: 'flex', gap: 12, alignItems: 'stretch', marginBottom: 16 }}>
+              <div style={{ flex: 1, background: riskTextColor(entry.risk_level) + '14', borderRadius: 10, padding: 12, textAlign: 'center', border: `1px solid ${riskTextColor(entry.risk_level)}33` }}>
+                <div style={{ fontSize: 26, fontWeight: 800, color: riskTextColor(entry.risk_level), lineHeight: 1 }}>{entry.risk_score.toFixed(0)}</div>
+                <div style={{ fontSize: 10, color: MUTED, marginTop: 2 }}>RISK SCORE</div>
+                <span className={riskBadgeClass(entry.risk_level)} style={{ fontSize: 9, marginTop: 4 }}>{entry.risk_level.toUpperCase()}</span>
+              </div>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'center' }}>
+                <div style={{ fontSize: 12, display: 'flex', justifyContent: 'space-between' }}>
+                  <span className="text-muted">24h failure prob</span>
+                  <span style={{ fontWeight: 700, color: entry.failure_probability_24h >= 0.7 ? RED : entry.failure_probability_24h >= 0.4 ? AMBER : GREEN }}>{pct(entry.failure_probability_24h)}</span>
+                </div>
+                <div style={{ fontSize: 12, display: 'flex', justifyContent: 'space-between' }}>
+                  <span className="text-muted">Health score</span>
+                  <span style={{ fontWeight: 700, color: entry.health_score <= 50 ? RED : entry.health_score <= 70 ? AMBER : GREEN }}>{entry.health_score.toFixed(0)}/100</span>
+                </div>
+                <div style={{ fontSize: 12, display: 'flex', justifyContent: 'space-between' }}>
+                  <span className="text-muted">Customers at risk</span>
+                  <span style={{ fontWeight: 700, color: '#202124' }}>{entry.customers_at_risk.toLocaleString()}</span>
+                </div>
+                <div style={{ fontSize: 12, display: 'flex', justifyContent: 'space-between' }}>
+                  <span className="text-muted">Critical facilities</span>
+                  <span style={{ fontWeight: 700, color: '#202124' }}>{entry.critical_facilities_at_risk}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Recommended action */}
+            <div style={{ background: riskTextColor(entry.risk_level) + '10', border: `1px solid ${riskTextColor(entry.risk_level)}30`, borderRadius: 10, padding: 10, marginBottom: 14 }}>
+              <span className={priorityBadgeClass(entry.priority_level)} style={{ marginBottom: 6, display: 'inline-block' }}>{entry.priority_level.toUpperCase()} · Priority #{entry.priority_level === 'immediate' ? 1 : entry.priority_level === 'high' ? 2 : entry.priority_level === 'medium' ? 3 : 4}</span>
+              <div style={{ fontWeight: 600, fontSize: 13, color: '#202124' }}>{entry.recommended_action}</div>
+              {assignedCrewId && (
+                <div style={{ marginTop: 6, fontSize: 12, color: ACCENT, fontWeight: 600 }}>
+                  <Truck className="h-3 w-3 inline-block align-middle mr-1" /> Crew {assignedCrewId} on the way
+                </div>
+              )}
+            </div>
+
+            {/* Risk breakdown */}
+            <SectionTitle>Risk Breakdown</SectionTitle>
+            {[
+              { label: 'Failure Probability', v: data.risk.failure_probability_24h },
+              { label: 'Grid Impact', v: data.risk.grid_impact_score },
+              { label: 'Weather Exposure', v: data.risk.weather_exposure_score },
+              { label: 'Criticality', v: data.risk.criticality_score },
+              { label: 'Lack of Redundancy', v: 1 - data.risk.redundancy_score },
+            ].map(({ label, v }) => (
+              <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <span style={{ width: 118, fontSize: 12, color: MUTED, flexShrink: 0 }}>{label}</span>
+                <MiniBar value={v} />
+                <span style={{ fontSize: 12, fontWeight: 600, color: '#202124', width: 32, textAlign: 'right' }}>{(v * 100).toFixed(0)}%</span>
+              </div>
+            ))}
+
+            {/* Why risky */}
+            <SectionTitle>Why Risky</SectionTitle>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {data.risk.top_factors.slice(0, 5).map((f, i) => (
+                <li key={i} style={{ display: 'flex', gap: 8, marginBottom: 6, fontSize: 12.5 }}>
+                  <span style={{ color: RED, flexShrink: 0 }}>▸</span>
                   <span style={{ color: '#202124' }}>{f}</span>
                 </li>
               ))}
             </ul>
-          </div>
 
-          {/* Recommended action */}
-          <div className="card" style={riskAccentStyle(risk.risk_level)}>
-            <div className="card-title">Recommended Action</div>
-            <span className={priorityBadgeClass(maint.priority_level)} style={{ marginBottom: 10, display: 'inline-block' }}>
-              {maint.priority_level.toUpperCase()} — Priority #{maint.priority}
-            </span>
-            <p style={{ fontWeight: 600, color: '#202124', marginBottom: 6, fontSize: 14 }}>{maint.recommended_action}</p>
-            <p className="text-xs text-muted" style={{ marginBottom: 4 }}>Window: {maint.recommended_window}</p>
-            <p className="text-xs text-muted" style={{ marginBottom: 4 }}>Duration: ~{maint.estimated_duration_hours}h</p>
-            <p className="text-xs text-muted" style={{ marginBottom: maint.assigned_crew_id ? 8 : 0 }}>Reason: {maint.reason}</p>
-            {maint.assigned_crew_id && (
-              <div style={{ background: '#e8f0fe', borderRadius: 8, padding: '8px 12px', fontSize: 13, color: ACCENT, fontWeight: 600 }}>
-                🚒 Assigned: {maint.assigned_crew_id}
+            {/* Crew dispatch */}
+            <SectionTitle><Truck className="h-3.5 w-3.5 inline-block align-middle mr-1" /> Crew Dispatch — Nearest First</SectionTitle>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {nearby.length === 0 && <p className="text-sm text-muted">No available crew nearby right now.</p>}
+              {nearby.map((n, i) => {
+                const isAssigned = assignedCrewId === n.crew.crew_id
+                return (
+                  <div key={n.crew.crew_id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 10, border: isAssigned ? `2px solid ${GREEN}` : '1px solid #e0e0e0', borderRadius: 8, background: isAssigned ? '#f0fbf3' : '#fff' }}>
+                    <div style={{ width: 30, height: 30, borderRadius: '50%', background: isAssigned ? GREEN : i === 0 ? '#0d904f' : '#e8f0fe', color: isAssigned || i === 0 ? '#fff' : ACCENT, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Truck className="h-4 w-4" />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: 12.5, color: '#202124', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {n.crew.name}
+                        {n.specialty_match && <span className="badge badge-green" style={{ marginLeft: 6, fontSize: 9 }}>MATCH</span>}
+                      </div>
+                      <div style={{ fontSize: 11, color: MUTED, marginTop: 2, display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span><MapPin className="h-3 w-3 inline-block align-middle mr-1" />{n.distance_km} km</span>
+                        <span><Clock className="h-3 w-3 inline-block align-middle mr-1" />ETA {n.eta_hours}h</span>
+                        <span>{n.crew.region}</span>
+                      </div>
+                    </div>
+                    {isAssigned ? (
+                      <span className="badge badge-green" style={{ fontSize: 10 }}>ASSIGNED</span>
+                    ) : (
+                      <button
+                        className="btn btn-primary btn-sm"
+                        disabled={assigning === n.crew.crew_id || n.crew.availability !== 'available'}
+                        onClick={() => handleAssign(n.crew.crew_id)}
+                        style={{ flexShrink: 0 }}
+                      >
+                        {assigning === n.crew.crew_id ? '…' : 'Assign'}
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {assigned && (
+              <div style={{ background: '#e6f4ea', border: '1px solid #ceead6', borderRadius: 8, padding: '10px 12px', marginTop: 10 }}>
+                <div style={{ fontSize: 12, color: '#0d904f', fontWeight: 700 }}><Truck className="h-3.5 w-3.5 inline-block align-middle mr-1" />{assigned.assignment} · {assigned.crew.name} ({assigned.reason.slice(0, 60)}…)</div>
               </div>
             )}
-          </div>
-        </div>
 
-        {/* Right column */}
-        <div>
-          {/* Telemetry chart */}
-          <div className="card">
-            <div className="card-title">Telemetry — Last 24 Hours</div>
-            {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={220}>
-                <LineChart data={chartData} margin={{ top: 4, right: 10, left: -10, bottom: 4 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f3f4" />
-                  <XAxis dataKey="time" tick={{ fontSize: 11, fill: MUTED }} interval="preserveStartEnd" />
-                  <YAxis tick={{ fontSize: 11, fill: MUTED }} />
-                  <Tooltip contentStyle={{ border: '1px solid #e0e0e0', borderRadius: 8, fontSize: 12 }} />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Line type="monotone" dataKey="Oil Temp (°C)" stroke={RED} dot={false} strokeWidth={2} />
-                  <Line type="monotone" dataKey="Load %" stroke={AMBER} dot={false} strokeWidth={2} />
-                  <Line type="monotone" dataKey="Vibration" stroke="#7c3aed" dot={false} strokeWidth={1.5} />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : <p className="text-sm text-muted">No telemetry data</p>}
-          </div>
-
-          {/* Grid Impact + Weather */}
-          <div className="grid-2">
-            <div className="card">
-              <div className="card-title">Grid Impact</div>
-              {[
-                { label: 'Customers at Risk', value: grid_impact.customers_at_risk.toLocaleString() },
-                { label: 'Critical Facilities', value: grid_impact.critical_facilities_at_risk },
-                { label: 'Downstream Assets', value: grid_impact.downstream_assets },
-                { label: 'Capacity', value: `${grid_impact.capacity_mva} MVA` },
-              ].map(({ label, value }) => (
-                <div key={label} className="flex-between" style={{ marginBottom: 8, fontSize: 13 }}>
-                  <span className="text-muted">{label}</span>
-                  <span style={{ fontWeight: 700, color: '#202124' }}>{value}</span>
-                </div>
-              ))}
-              <div style={{ marginTop: 8 }}>
-                <div style={{ fontSize: 12, color: MUTED, marginBottom: 4 }}>Impact Score</div>
-                <MiniBar value={grid_impact.grid_impact_score} />
-              </div>
-            </div>
-
-            <div className="card">
-              <div className="card-title">Weather Exposure</div>
-              {[
-                { label: 'Temperature', value: `${weather.temperature}°C`, hi: weather.temperature >= 42 },
-                { label: 'Wind Speed', value: `${weather.wind_speed} m/s`, hi: false },
-                { label: 'Storm Severity', value: pct(weather.storm_severity), hi: weather.storm_severity >= 0.6 },
-              ].map(({ label, value, hi }) => (
-                <div key={label} className="flex-between" style={{ marginBottom: 8, fontSize: 13 }}>
-                  <span className="text-muted">{label}</span>
-                  <span style={{ fontWeight: 700, color: hi ? RED : '#202124' }}>{value}</span>
-                </div>
-              ))}
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '8px 0' }}>
-                {weather.heatwave_indicator && <span className="badge badge-amber">🔥 Heatwave</span>}
-                {weather.severe_weather_indicator && <span className="badge badge-red">⛈ Severe</span>}
-              </div>
-              <div style={{ fontSize: 12, color: MUTED, marginBottom: 4 }}>Exposure Score</div>
-              <MiniBar value={weather.weather_exposure_score} />
-            </div>
-          </div>
-
-          {/* Incidents */}
-          {incidents.length > 0 && (
-            <div className="card">
-              <div className="card-title">Recent Incidents ({incidents.length})</div>
-              <div style={{ maxHeight: 160, overflowY: 'auto' }}>
-                {incidents.map(inc => (
-                  <div key={inc.incident_id} className="anomaly-row" style={{ ...riskAccentStyle(inc.severity), paddingLeft: 12, marginBottom: 6 }}>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: 13, color: '#202124' }}>{inc.description}</p>
-                      <p style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{new Date(inc.timestamp).toLocaleDateString()} — {inc.severity}</p>
-                    </div>
+            {/* Grid impact + weather */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 4 }}>
+              <div>
+                <SectionTitle>Grid Impact</SectionTitle>
+                {[
+                  { label: 'Customers', value: data.grid_impact.customers_at_risk.toLocaleString() },
+                  { label: 'Critical', value: data.grid_impact.critical_facilities_at_risk },
+                  { label: 'Downstream', value: data.grid_impact.downstream_assets },
+                  { label: 'Capacity', value: `${data.grid_impact.capacity_mva} MVA` },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex-between" style={{ marginBottom: 5, fontSize: 12 }}>
+                    <span className="text-muted">{label}</span>
+                    <span style={{ fontWeight: 700, color: '#202124' }}>{value}</span>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-
-          {/* Maintenance history */}
-          {maintenance_history.length > 0 && (
-            <div className="card">
-              <div className="card-title">Maintenance History</div>
-              {maintenance_history.map(m => (
-                <div key={m.record_id} className="anomaly-row" style={{ borderLeft: `4px solid ${ACCENT}`, paddingLeft: 12, marginBottom: 6 }}>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: 13, color: '#202124' }}>{m.work_done}</p>
-                    <p style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{new Date(m.date).toLocaleDateString()} — {m.technician}</p>
+              <div>
+                <SectionTitle>Weather</SectionTitle>
+                {[
+                  { label: 'Temp', value: `${data.weather.temperature}°C` },
+                  { label: 'Wind', value: `${data.weather.wind_speed} m/s` },
+                  { label: 'Storm', value: pct(data.weather.storm_severity) },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex-between" style={{ marginBottom: 5, fontSize: 12 }}>
+                    <span className="text-muted">{label}</span>
+                    <span style={{ fontWeight: 700, color: '#202124' }}>{value}</span>
                   </div>
+                ))}
+                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 4 }}>
+                  {data.weather.heatwave_indicator && <span className="badge badge-amber" style={{ fontSize: 9 }}>Heatwave</span>}
+                  {data.weather.severe_weather_indicator && <span className="badge badge-red" style={{ fontSize: 9 }}>Severe</span>}
                 </div>
-              ))}
+              </div>
             </div>
-          )}
+
+            {/* Incidents + maintenance */}
+            {data.incidents.length > 0 && (
+              <>
+                <SectionTitle><AlertTriangle className="h-3.5 w-3.5 inline-block align-middle mr-1" /> Recent Incidents ({data.incidents.length})</SectionTitle>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {data.incidents.slice(0, 3).map(inc => (
+                    <div key={inc.incident_id} style={{ borderLeft: `3px solid ${RED}`, padding: '6px 10px', background: '#fdf2f2', borderRadius: 6 }}>
+                      <p style={{ fontSize: 12, color: '#202124', margin: 0 }}>{inc.description}</p>
+                      <p style={{ fontSize: 11, color: MUTED, margin: '2px 0 0' }}>{new Date(inc.timestamp).toLocaleDateString()} — {inc.severity}</p>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+            {data.maintenance_history.length > 0 && (
+              <>
+                <SectionTitle><ShieldAlert className="h-3.5 w-3.5 inline-block align-middle mr-1" /> Maintenance History</SectionTitle>
+                {data.maintenance_history.slice(0, 3).map(m => (
+                  <div key={m.record_id} style={{ borderLeft: `3px solid ${ACCENT}`, padding: '6px 10px', background: '#f5f7ff', borderRadius: 6, marginBottom: 6 }}>
+                    <p style={{ fontSize: 12, color: '#202124', margin: 0 }}>{m.work_done}</p>
+                    <p style={{ fontSize: 11, color: MUTED, margin: '2px 0 0' }}>{new Date(m.date).toLocaleDateString()} — {m.technician}</p>
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Collapsed → reopen button */}
+      {entry && !panelOpen && (
+        <button
+          onClick={() => setPanelOpen(true)}
+          className="btn btn-secondary"
+          style={{ position: 'absolute', top: 14, right: 14, zIndex: 1000, padding: '8px 10px' }}
+          title="Open Asset Intelligence panel"
+        >
+          <PanelRightOpen className="h-4 w-4" />
+        </button>
+      )}
     </div>
   )
 }
 
-function MetricCard({ label, value, color }: { label: string; value: string; color: string }) {
-  return (
-    <div className="kpi-card" style={{ textAlign: 'center' }}>
-      <div className="kpi-value" style={{ color, fontSize: 24 }}>{value}</div>
-      <div className="kpi-label" style={{ marginTop: 8 }}>{label}</div>
-    </div>
-  )
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return <p style={{ fontSize: 11, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase', color: MUTED, margin: '14px 0 8px', display: 'flex', alignItems: 'center' }}>{children}</p>
 }

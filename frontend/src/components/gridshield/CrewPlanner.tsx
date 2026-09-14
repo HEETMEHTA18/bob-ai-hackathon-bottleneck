@@ -4,6 +4,7 @@
  */
 import React, { useState, useEffect } from 'react'
 import { gsGetCrewPlan, gsGetCrews, type GSCrewAssignment, type GSCrew } from '../../api/gridshield'
+import { Truck, MapPin, ChevronRight } from 'lucide-react'
 import { riskBadgeClass, riskTextColor, assetTypeIcon, RED, AMBER, GREEN, ACCENT, MUTED } from './utils'
 
 interface Props { onSelectAsset: (id: string) => void }
@@ -46,12 +47,12 @@ export default function CrewPlanner({ onSelectAsset }: Props) {
       {/* Summary */}
       <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(3,1fr)', marginBottom: 24 }}>
         <div className="kpi-card">
-          <div className="kpi-icon" style={{ background: '#fce8e6', color: RED }}>🚒</div>
+          <div className="kpi-icon" style={{ background: '#fce8e6', color: RED }}><Truck className="h-5 w-5" /></div>
           <div className="kpi-value" style={{ color: RED }}>{dispatched}</div>
           <div className="kpi-label">Dispatched</div>
         </div>
         <div className="kpi-card">
-          <div className="kpi-icon" style={{ background: '#fef7e0', color: AMBER }}>📍</div>
+          <div className="kpi-icon" style={{ background: '#fef7e0', color: AMBER }}><MapPin className="h-5 w-5" /></div>
           <div className="kpi-value" style={{ color: AMBER }}>{prepositioned}</div>
           <div className="kpi-label">Pre-Positioned</div>
         </div>
@@ -92,10 +93,10 @@ export default function CrewPlanner({ onSelectAsset }: Props) {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: '#202124' }}>🚒 {a.crew_name || a.crew_id}</div>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: '#202124', display: 'flex', alignItems: 'center', gap: 6 }}><Truck className="h-3.5 w-3.5 text-green-600" />{a.crew_name || a.crew_id}</div>
                       <div style={{ fontSize: 12, color: MUTED }}>{a.crew_specialty} specialist · {a.region}</div>
                     </div>
-                    <div style={{ color: MUTED, fontSize: 18 }}>→</div>
+                    <div style={{ color: MUTED, fontSize: 18 }}><ChevronRight className="h-4 w-4" /></div>
                     <div style={{ cursor: 'pointer' }} onClick={() => onSelectAsset(a.asset_id)}>
                       <div style={{ fontWeight: 600, fontSize: 14, color: ACCENT }}>{assetTypeIcon(a.asset_type)} {a.asset_name || a.asset_id}</div>
                       <div style={{ fontSize: 12, color: MUTED }}>{a.asset_id} · Risk {a.risk_score?.toFixed(0)}/100</div>
@@ -139,7 +140,7 @@ export default function CrewPlanner({ onSelectAsset }: Props) {
               <div key={c.crew_id} className="card">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: 14, color: '#202124' }}>🚒 {c.name}</div>
+                    <div style={{ fontWeight: 700, fontSize: 14, color: '#202124', display: 'flex', alignItems: 'center', gap: 6 }}><Truck className="h-3.5 w-3.5 text-green-600" />{c.name}</div>
                     <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{c.crew_id} · {c.specialty} · {c.region}</div>
                   </div>
                   <span className={`badge ${c.availability === 'available' ? 'badge-green' : c.availability === 'busy' ? 'badge-amber' : 'badge-default'}`}>

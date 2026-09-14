@@ -1,5 +1,5 @@
 """
-GridShield — Mock ML Adapter.
+GridShield — ML Adapter.
 
 INTEGRATION SEAM: to replace with the real model, swap MockFailurePredictor
 for RealFailurePredictor. The contract (FailurePrediction) does not change.
@@ -13,12 +13,15 @@ Usage:
 """
 from __future__ import annotations
 import os
+import logging
 from abc import ABC, abstractmethod
 from typing import Optional
 
 from backend.gridshield.contracts import (
     FailurePrediction, TelemetryRecord, WeatherExposure, Incident,
 )
+
+logger = logging.getLogger("gridshield.ml_adapter")
 
 
 # ─── Abstract interface (the stable seam) ────────────────────────────────────
@@ -179,6 +182,123 @@ class MockFailurePredictor(FailurePredictor):
         )
 
 
+# ─── Real ML predictor (XGBoost) ─────────────────────────────────────────────
+
+class RealFailurePredictor(FailurePredictor):
+    """
+    Real ML predictor using XGBoost models from the training pipeline.
+    Wraps predict_service.py which handles model loading, inference, and fallback.
+    """
+    MODEL_VERSION = "real-ml-v1"
+
+    def predict(
+        self,
+        asset_id: str,
+        latest_telemetry: TelemetryRecord,
+        incidents: list[Incident],
+        weather: WeatherExposure,
+        asset_age_years: float,
+        asset_criticality: float,
+    ) -> FailurePrediction:
+        try:
+            from backend.gridshield.ml.predict_service import predict as ml_predict
+            from backend.gridshield.mock_data import (
+                get_telemetry, ASSET_MAP, get_grid_impact_meta,
+                get_maintenance_records,
+            )
+
+            # Get full 48h telemetry history for rolling features
+            telemetry_records = get_telemetry(asset_id, hours=48)
+            telemetry_history = []
+            for rec in telemetry_records:
+                telemetry_history.append({
+                    "timestamp": rec.timestamp.isoformat() if hasattr(rec.timestamp, 'isoformat') else str(rec.timestamp),
+                    "oil_temperature": rec.oil_temperature,
+                    "load_percentage": rec.load_percentage,
+                    "vibration": rec.vibration,
+                    "partial_discharge": rec.partial_discharge,
+                    "oil_quality": 90.0,
+                    "current_unbalance": rec.current_unbalance,
+                    "voltage_deviation": rec.voltage_deviation,
+                    "ambient_temperature": rec.ambient_temperature,
+                })
+
+            # Build weather dict
+            weather_dict = {
+                "temperature": weather.temperature,
+                "humidity": weather.humidity,
+                "wind_speed": weather.wind_speed,
+                "wind_gust": weather.wind_speed * 1.5,
+                "precipitation": weather.precipitation,
+                "pressure": 1013.25,
+                "cloud_cover": 50.0,
+                "weather_code": 1 if weather.severe_weather_indicator else 0,
+            }
+
+            # Build asset dict from REAL fleet metadata (no hardcoded averages)
+            _asset = ASSET_MAP.get(asset_id)
+            _customers, _, _ = get_grid_impact_meta(asset_id)
+            _mnt = get_maintenance_records(asset_id)
+            import datetime as _dt
+
+            def _days_since_maintenance() -> float:
+                if not _mnt:
+                    return 365.0
+                try:
+                    last = max(r.date for r in _mnt)
+                    if hasattr(last, "date"):
+                        last = last.date() if hasattr(last, "date") else last
+                    ref = _dt.datetime(2025, 6, 15, 12, 0, 0)
+                    ref_d = ref.date()
+                    last_d = last.date() if hasattr(last, "date") else last
+                    return max(0.0, float((ref_d - last_d).days))
+                except Exception:
+                    return 365.0
+
+            asset_dict = {
+                "age_years": asset_age_years,
+                "capacity_mva": _asset.capacity_mva if _asset else 15.0,
+                "customers_served": float(_customers),
+                "criticality": asset_criticality,
+                "redundancy_level": _asset.redundancy_level if _asset else 0.5,
+                "previous_failures": len(incidents),
+                "days_since_maintenance": _days_since_maintenance(),
+            }
+
+            # Build incidents list
+            incidents_list = [{
+                "timestamp": inc.timestamp.isoformat() if hasattr(inc.timestamp, 'isoformat') else str(inc.timestamp),
+                "type": inc.description.split()[0] if inc.description else "unknown",
+                "severity": inc.severity,
+                "description": inc.description,
+            } for inc in incidents]
+
+            result = ml_predict(
+                asset_id=asset_id,
+                telemetry_history=telemetry_history,
+                weather=weather_dict,
+                asset=asset_dict,
+                incidents=incidents_list,
+            )
+
+            return FailurePrediction(
+                asset_id=result.asset_id,
+                failure_probability_24h=result.failure_probability_24h,
+                failure_probability_72h=result.failure_probability_72h,
+                health_score=result.health_score,
+                anomaly_score=result.anomaly_score,
+                confidence=result.confidence,
+                top_factors=result.top_factors,
+                model_version=result.model_version,
+            )
+        except Exception as e:
+            logger.warning(f"[GridShield] Real ML predict failed for {asset_id}: {e} — using fallback")
+            # Fall back to mock on error
+            return MockFailurePredictor().predict(
+                asset_id, latest_telemetry, incidents, weather, asset_age_years, asset_criticality
+            )
+
+
 # ─── Scenario-aware predictor wrapper ────────────────────────────────────────
 
 _SCENARIO_MODIFIERS = {
@@ -222,19 +342,39 @@ class ScenarioFailurePredictor(FailurePredictor):
 
 # ─── Factory ─────────────────────────────────────────────────────────────────
 
+_predictor_cache: dict[str, FailurePredictor] = {}
+
+
 def get_predictor(scenario: Optional[str] = None) -> FailurePredictor:
     """
-    Factory.  Returns the active predictor.
+    Factory.  Returns the active predictor (cached singleton per scenario).
 
-    Future: check env/config, return RealFailurePredictor when available.
+    When GRIDSHIELD_USE_REAL_ML=1, attempts to load XGBoost models.
+    Falls back to mock if models unavailable or loading fails.
     """
+    cache_key = scenario or "__base__"
+    if cache_key in _predictor_cache:
+        return _predictor_cache[cache_key]
+
     use_real = os.environ.get("GRIDSHIELD_USE_REAL_ML", "0") == "1"
+    predictor: FailurePredictor
     if use_real:
-        # Future integration point
-        # from backend.gridshield.real_ml_adapter import RealFailurePredictor
-        # return RealFailurePredictor()
-        pass
+        try:
+            from backend.gridshield.ml.predict_service import reload_models, models_loaded
+            if models_loaded() or reload_models():
+                logger.info("[GridShield] Real ML models loaded — using RealFailurePredictor")
+                base = RealFailurePredictor()
+                predictor = ScenarioFailurePredictor(scenario, base=base) if scenario else base
+                _predictor_cache[cache_key] = predictor
+                return predictor
+            else:
+                logger.warning("[GridShield] Real ML models failed to load — falling back to mock")
+        except Exception as e:
+            logger.warning(f"[GridShield] Real ML import failed ({e}) — falling back to mock")
 
     if scenario:
-        return ScenarioFailurePredictor(scenario)
-    return MockFailurePredictor()
+        predictor = ScenarioFailurePredictor(scenario)
+    else:
+        predictor = MockFailurePredictor()
+    _predictor_cache[cache_key] = predictor
+    return predictor

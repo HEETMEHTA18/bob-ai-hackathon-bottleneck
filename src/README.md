@@ -112,10 +112,7 @@ src/
 │   ├── vite.config.ts
 │   ├── tailwind.config.js
 │   └── tsconfig.json
-├── tests/                        Pytest test suite (44 tests)
-│   ├── test_gridshield.py        GridShield unit tests
-│   ├── test_integration.py       Integration tests
-│   └── test_models.py            Model tests
+├── tests/                        Pytest test suite
 ├── requirements.txt              Python dependencies
 └── .env.example                  Environment variable template
 ```

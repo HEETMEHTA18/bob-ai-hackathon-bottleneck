@@ -1,0 +1,74 @@
+{
+  "trained_at": "2026-09-14T16:29:52.039555",
+  "model_version": "bottleneck-failure-v2",
+  "failure_24h": {
+    "pr_auc": 0.9977,
+    "roc_auc": 0.996,
+    "recall": 0.5498,
+    "precision": 1.0,
+    "f1": 0.7095,
+    "brier": 0.1972,
+    "confusion_matrix": [
+      [
+        1944,
+        0
+      ],
+      [
+        2042,
+        2494
+      ]
+    ],
+    "threshold": 0.5,
+    "train_rows": 30210,
+    "val_rows": 6510,
+    "test_rows": 6480,
+    "positive_rate_train": 0.0246,
+    "positive_rate_test": 0.7,
+    "scale_pos_weight": 39.714,
+    "best_n_estimators": 14
+  },
+  "failure_72h": {
+    "pr_auc": 1.0,
+    "roc_auc": 1.0,
+    "recall": 0.9985,
+    "precision": 1.0,
+    "f1": 0.9992,
+    "brier": 0.2043,
+    "confusion_matrix": [
+      [
+        1944,
+        0
+      ],
+      [
+        7,
+        4529
+      ]
+    ],
+    "threshold": 0.5,
+    "train_rows": 30210,
+    "val_rows": 6510,
+    "test_rows": 6480,
+    "positive_rate_train": 0.15,
+    "positive_rate_test": 0.7,
+    "scale_pos_weight": 5.664,
+    "best_n_estimators": 2
+  },
+  "anomaly": {
+    "mae": 0.0366,
+    "train_rows": 30210,
+    "test_rows": 6480,
+    "best_n_estimators": 101
+  },
+  "top_features_24h": [
+    "vibration_mean_6h",
+    "criticality",
+    "oil_temp_mean_24h",
+    "vibration_current",
+    "asset_age",
+    "load_max_24h",
+    "oil_temp_mean_6h",
+    "pd_current",
+    "customers_served",
+    "days_since_maintenance"
+  ]
+}

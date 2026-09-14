@@ -22,7 +22,8 @@ from typing import List, Optional
 
 from backend.gridshield.contracts import (
     Asset, FailurePrediction, GridImpact, WeatherExposure, RiskAssessment,
-    RiskLevel, RiskRankingEntry, MaintenanceRecommendation,
+    RiskLevel, RiskRankingEntry, MaintenanceRecommendation, Crew,
+    CrewAssignment, NearbyCrew,
 )
 
 
@@ -169,8 +170,6 @@ def build_maintenance_recommendation(
 
 # ─── Crew Pre-Positioning ─────────────────────────────────────────────────────
 
-from backend.gridshield.contracts import Crew, CrewAssignment
-
 
 def _crew_assignment_type(priority_level: str) -> str:
     if priority_level == "immediate":
@@ -223,3 +222,51 @@ def assign_crew(
         reason=f"{maint.priority_level.capitalize()} priority — {maint.reason[:80]}",
         eta_hours=eta,
     )
+
+
+def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Great-circle distance in kilometres between two lat/lon points."""
+    r = 6371.0
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dp = math.radians(lat2 - lat1)
+    dl = math.radians(lon2 - lon1)
+    a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+    return round(r * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a)), 1)
+
+
+def eta_hours_for_distance(distance_km: float) -> float:
+    """Assume avg convoy speed of ~35 km/h inside the city network,
+    with a floor for mobilization + safety time."""
+    return round(max(distance_km / 35.0, 0.35), 1)
+
+
+def nearest_crews(
+    asset: Asset,
+    crews: List[Crew],
+    limit: int = 4,
+    only_available: bool = True,
+) -> List[NearbyCrew]:
+    """
+    Rank crews by distance to the asset, favouring the right specialty.
+    Uses the crew depot base location (crew.lat/lon).
+    """
+    matching = []
+    for c in crews:
+        if only_available and c.availability != "available":
+            continue
+        if c.lat is None or c.lon is None:
+            continue
+        d = haversine_km(asset.location.lat, asset.location.lon, c.lat, c.lon)
+        matching.append((c, d, c.specialty == asset.asset_type))
+
+    # Specialty match first, then by distance.
+    matching.sort(key=lambda t: (not t[2], t[1]))
+    return [
+        NearbyCrew(
+            crew=c,
+            distance_km=d,
+            eta_hours=eta_hours_for_distance(d),
+            specialty_match=match,
+        )
+        for c, d, match in matching[:limit]
+    ]

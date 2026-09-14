@@ -5,6 +5,7 @@
 import React, { useState } from 'react'
 import { gsSimulateScenario, type GSScenarioResult } from '../../api/gridshield'
 import { riskBadgeClass, riskTextColor, riskBarColor, RED, AMBER, GREEN, ACCENT, MUTED } from './utils'
+import { CloudLightning, Thermometer, Wrench, Truck, ArrowUp, ChevronRight } from 'lucide-react'
 
 interface Props { onSelectAsset: (id: string) => void }
 
@@ -12,17 +13,17 @@ const SCENARIOS = [
   {
     id: 'severe_storm', label: 'Severe Storm',
     description: 'Increases weather exposure, wind, precipitation and storm severity across all degraded assets.',
-    icon: '⛈', borderColor: '#1a73e8', bgColor: '#e8f0fe',
+    Icon: CloudLightning, borderColor: '#1a73e8', bgColor: '#e8f0fe',
   },
   {
     id: 'heatwave', label: 'Heatwave',
-    description: 'Elevates ambient temperature and thermal stress — critical for transformers.',
-    icon: '🔥', borderColor: RED, bgColor: '#fce8e6',
+    description: 'Elevates ambient temperature and thermal stress -- critical for transformers.',
+    Icon: Thermometer, borderColor: RED, bgColor: '#fce8e6',
   },
   {
     id: 'asset_degradation', label: 'Asset Degradation',
-    description: 'Simulates accelerated wear — increases vibration, anomaly score, and failure probability.',
-    icon: '⚙️', borderColor: AMBER, bgColor: '#fef7e0',
+    description: 'Simulates accelerated wear -- increases vibration, anomaly score, and failure probability.',
+    Icon: Wrench, borderColor: AMBER, bgColor: '#fef7e0',
   },
 ]
 
@@ -65,7 +66,7 @@ export default function ScenarioSimulator({ onSelectAsset }: Props) {
               transition: 'all 0.15s',
             }}
           >
-            <div style={{ fontSize: 32, marginBottom: 10 }}>{s.icon}</div>
+            <div style={{ marginBottom: 10 }}><s.Icon size={32} color={s.borderColor} /></div>
             <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6, color: '#202124' }}>{s.label}</div>
             <div className="text-sm text-muted">{s.description}</div>
           </div>
@@ -88,8 +89,8 @@ export default function ScenarioSimulator({ onSelectAsset }: Props) {
       {results && results.length > 0 && (
         <div>
           <div className="page-subtitle" style={{ marginBottom: 16 }}>
-            {SCENARIOS.find(s => s.id === selected)?.icon}{' '}
-            {SCENARIOS.find(s => s.id === selected)?.label} — Impact on {results.length} assets
+            {(() => { const s = SCENARIOS.find(s => s.id === selected); return s ? <s.Icon size={16} color={s.borderColor} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 6 }} /> : null })()}
+            {SCENARIOS.find(s => s.id === selected)?.label} -- Impact on {results.length} assets
             <span style={{ marginLeft: 12, fontSize: 12, color: MUTED }}>Sorted by risk increase</span>
           </div>
 
@@ -110,8 +111,8 @@ export default function ScenarioSimulator({ onSelectAsset }: Props) {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', gap: 8, marginBottom: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                       <span style={{ fontWeight: 700, fontSize: 15, color: '#202124' }}>{r.asset_id}</span>
-                      {escalated && <span className="badge badge-red">↑ ESCALATED</span>}
-                      {r.crew_assigned && <span className="badge badge-default">🚒 {r.crew_assigned}</span>}
+                      {escalated && <span className="badge badge-red"><ArrowUp className="h-3 w-3 inline-block align-middle mr-1" />ESCALATED</span>}
+                      {r.crew_assigned && <span className="badge badge-default"><Truck className="h-3 w-3 inline-block align-middle mr-1" />{r.crew_assigned}</span>}
                     </div>
                     <p className="text-sm text-muted">{r.description}</p>
                   </div>
@@ -127,7 +128,7 @@ export default function ScenarioSimulator({ onSelectAsset }: Props) {
                       <span className={riskBadgeClass(r.risk_level_before)} style={{ fontSize: 10 }}>{r.risk_level_before}</span>
                     </div>
 
-                    <div style={{ fontSize: 20, color: MUTED }}>→</div>
+                    <div style={{ fontSize: 20, color: MUTED }}><ChevronRight className="h-5 w-5" /></div>
 
                     <div style={{ textAlign: 'center' }}>
                       <div style={{ fontSize: 12, color: MUTED, marginBottom: 4 }}>After</div>

@@ -242,7 +242,7 @@ def ask_gemini(
                 history.append({"role": role, "parts": [msg.get("content", "")]})
 
         model = _genai.GenerativeModel(
-            "gemini-2.5-flash",
+            "gemini-2.0-flash-lite",
             system_instruction=system_and_context,
         )
 
