@@ -9,6 +9,13 @@ submission:
     name: "Heet Mehta"
     email: "heetmehta18125@gmail.com"
     github: "HEETMEHTA18"
+  team_members:
+    - name: "Heet Mehta"
+      role: "Team Lead"
+    - name: "Dhruvin Vaghasiya"
+      role: "Team Member"
+    - name: "Urval Kheni"
+      role: "Team Member"
 
   # ── Track ─────────────────────────────────────────────────────
   track: "U1"

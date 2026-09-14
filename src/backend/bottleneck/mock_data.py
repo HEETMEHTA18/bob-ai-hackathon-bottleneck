@@ -7,7 +7,7 @@ TR-1042 is the "hero" critical asset.
 """
 from __future__ import annotations
 from datetime import datetime, timedelta
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from backend.bottleneck.contracts import (
     Asset, Location, TelemetryRecord, Incident, MaintenanceRecord, Crew,
@@ -187,28 +187,76 @@ _TELEMETRY_BASE: Dict[str, dict] = {
 
 
 def get_telemetry(asset_id: str, hours: int = 48) -> List[TelemetryRecord]:
-    """Return deterministic hourly telemetry for the past `hours` hours."""
+    """Return deterministic hourly telemetry for the past `hours` hours.
+    
+    High-risk assets (those with critical/major incidents) get a degradation
+    ramp that elevates oil temperature, vibration, and partial discharge over
+    the 48h window — matching the patterns the XGBoost model was trained on.
+    """
     base = _TELEMETRY_BASE.get(asset_id, dict(
         oil_temp=55, load=55, vib=1.5, unbal=2.5, vdev=2.0, pd=0.20, amb=33
     ))
     now = datetime(2025, 6, 15, 12, 0, 0)
     records = []
-    # Use a simple hash seed per asset for determinism
     seed = sum(ord(c) for c in asset_id)
+    
+    # Determine degradation level based on asset risk profile
+    # Assets with more incidents or critical events get stronger degradation
+    n_incidents = len(_INCIDENT_TEMPLATES.get(asset_id, []))
+    has_critical = any(i["sev"] == "critical" for i in _INCIDENT_TEMPLATES.get(asset_id, []))
+    has_major = any(i["sev"] == "major" for i in _INCIDENT_TEMPLATES.get(asset_id, []))
+    
     for i in range(hours, 0, -1):
         ts = now - timedelta(hours=i)
-        # Slow sinusoidal drift (+/- 5%) — deterministic, no random
-        drift = 0.05 * (((seed + i) % 17) / 8.5 - 1.0)
+        t_norm = 1.0 - (i / hours)  # 0.0 → 1.0 over the window
+        
+        if has_critical:
+            # Strong degradation: oil +35°C, vib +70%, pd +0.40
+            deg = t_norm ** 1.3
+            ot = base["oil_temp"] + deg * 35
+            vib = base["vib"] * (1 + deg * 0.7)
+            pd_val = min(1.0, base["pd"] + deg * 0.40)
+            load = min(100, base["load"] * (1 + deg * 0.18))
+            unbal = base["unbal"] * (1 + deg * 0.35)
+            vdev = base["vdev"] * (1 + deg * 0.30)
+        elif has_major or n_incidents >= 2:
+            # Moderate degradation: oil +20°C, vib +40%, pd +0.22
+            deg = t_norm ** 1.5
+            ot = base["oil_temp"] + deg * 20
+            vib = base["vib"] * (1 + deg * 0.4)
+            pd_val = min(1.0, base["pd"] + deg * 0.22)
+            load = min(100, base["load"] * (1 + deg * 0.10))
+            unbal = base["unbal"] * (1 + deg * 0.20)
+            vdev = base["vdev"] * (1 + deg * 0.18)
+        elif n_incidents == 1:
+            # Mild degradation: oil +8°C, vib +15%, pd +0.10
+            deg = t_norm ** 1.8
+            ot = base["oil_temp"] + deg * 8
+            vib = base["vib"] * (1 + deg * 0.15)
+            pd_val = min(1.0, base["pd"] + deg * 0.10)
+            load = min(100, base["load"] * (1 + deg * 0.05))
+            unbal = base["unbal"] * (1 + deg * 0.08)
+            vdev = base["vdev"] * (1 + deg * 0.08)
+        else:
+            # Healthy: only small sinusoidal drift
+            drift = 0.05 * (((seed + i) % 17) / 8.5 - 1.0)
+            ot = base["oil_temp"] * (1 + drift * 0.6)
+            vib = max(0, base["vib"] * (1 + drift * 0.8))
+            pd_val = min(1, max(0, base["pd"] * (1 + drift * 0.7)))
+            load = min(100, base["load"] * (1 + drift * 0.4))
+            unbal = max(0, base["unbal"] * (1 + drift * 0.5))
+            vdev = max(0, base["vdev"] * (1 + drift * 0.5))
+        
         records.append(TelemetryRecord(
             asset_id=asset_id,
             timestamp=ts,
-            oil_temperature=round(base["oil_temp"] * (1 + drift * 0.6), 1),
-            load_percentage=round(min(100, base["load"] * (1 + drift * 0.4)), 1),
-            vibration=round(max(0, base["vib"] * (1 + drift * 0.8)), 2),
-            current_unbalance=round(max(0, base["unbal"] * (1 + drift * 0.5)), 2),
-            voltage_deviation=round(max(0, base["vdev"] * (1 + drift * 0.5)), 2),
-            partial_discharge=round(min(1, max(0, base["pd"] * (1 + drift * 0.7))), 3),
-            ambient_temperature=round(base["amb"] + drift * 3, 1),
+            oil_temperature=round(min(140, max(20, ot)), 1),
+            load_percentage=round(min(100, max(0, load)), 1),
+            vibration=round(max(0, vib), 2),
+            current_unbalance=round(max(0, unbal), 2),
+            voltage_deviation=round(max(0, vdev), 2),
+            partial_discharge=round(min(1, max(0, pd_val)), 3),
+            ambient_temperature=round(base["amb"] + (t_norm - 0.5) * 2, 1),
         ))
     return records
 
@@ -329,25 +377,25 @@ def get_maintenance_records(asset_id: str) -> List[MaintenanceRecord]:
 
 CREWS: List[Crew] = [
     Crew(crew_id="CREW-01", name="Alpha Transformer Team", specialty="transformer",
-         region="North", availability="available", capacity=2),
+         region="North", availability="available", capacity=2, lat=23.0450, lon=72.5750),
     Crew(crew_id="CREW-02", name="Beta Transformer Team", specialty="transformer",
-         region="South", availability="available", capacity=2),
+         region="South", availability="available", capacity=2, lat=22.9750, lon=72.5600),
     Crew(crew_id="CREW-03", name="Gamma Breaker Specialists", specialty="breaker",
-         region="North", availability="available", capacity=3),
+         region="North", availability="available", capacity=3, lat=23.0300, lon=72.5660),
     Crew(crew_id="CREW-04", name="Delta Feeder Crew", specialty="feeder",
-         region="East", availability="available", capacity=3),
+         region="East", availability="available", capacity=3, lat=23.0500, lon=72.6250),
     Crew(crew_id="CREW-05", name="Epsilon Switch Crew", specialty="switch",
-         region="West", availability="busy", capacity=2),
+         region="West", availability="busy", capacity=2, lat=23.0000, lon=72.5000),
     Crew(crew_id="CREW-06", name="Zeta Recloser Team", specialty="recloser",
-         region="Central", availability="available", capacity=2),
+         region="Central", availability="available", capacity=2, lat=23.0270, lon=72.5820),
     Crew(crew_id="CREW-07", name="Eta Central Transformer", specialty="transformer",
-         region="Central", availability="available", capacity=2),
+         region="Central", availability="available", capacity=2, lat=23.0220, lon=72.5850),
     Crew(crew_id="CREW-08", name="Theta South Breaker", specialty="breaker",
-         region="South", availability="available", capacity=2),
+         region="South", availability="available", capacity=2, lat=22.9900, lon=72.5480),
     Crew(crew_id="CREW-09", name="Iota West Transformer", specialty="transformer",
-         region="West", availability="offline", capacity=2),
+         region="West", availability="offline", capacity=2, lat=23.0050, lon=72.4950),
     Crew(crew_id="CREW-10", name="Kappa East Feeder", specialty="feeder",
-         region="East", availability="available", capacity=3),
+         region="East", availability="available", capacity=3, lat=23.0400, lon=72.6300),
 ]
 
 CREW_MAP: Dict[str, Crew] = {c.crew_id: c for c in CREWS}
@@ -393,3 +441,72 @@ _GRID_IMPACT_META: Dict[str, tuple] = {
 def get_grid_impact_meta(asset_id: str) -> tuple:
     """Return (customers, critical_facilities, downstream_assets)."""
     return _GRID_IMPACT_META.get(asset_id, (1000, 0, 2))
+
+
+# ─── Hardware Integration Configs ─────────────────────────────────────────────
+# Simulates real hardware integration configs for assets with IoT devices.
+
+HARDWARE_CONFIGS: Dict[str, dict] = {
+    "TR-1042": {
+        "asset_id": "TR-1042",
+        "device_type": "dtc",
+        "protocol": "modbus_tcp",
+        "connection": {"host": "10.10.1.42", "port": 502, "unit_id": 1},
+        "registers": [
+            {"name": "oil_temp", "address": 100, "type": "holding", "data_type": "float32", "scale": 0.1, "offset": 0, "unit": "°C", "telemetry_field": "oil_temperature"},
+            {"name": "load_pct", "address": 104, "type": "holding", "data_type": "float32", "scale": 0.1, "offset": 0, "unit": "%", "telemetry_field": "load_percentage"},
+            {"name": "vibration", "address": 108, "type": "holding", "data_type": "float32", "scale": 0.01, "offset": 0, "unit": "mm/s", "telemetry_field": "vibration"},
+            {"name": "pd_level", "address": 112, "type": "holding", "data_type": "float32", "scale": 0.001, "offset": 0, "unit": "pC", "telemetry_field": "partial_discharge"},
+        ],
+        "poll_interval_seconds": 30,
+        "enabled": True,
+        "status": "connected",
+    },
+    "TR-1019": {
+        "asset_id": "TR-1019",
+        "device_type": "smart_sensor",
+        "protocol": "modbus_tcp",
+        "connection": {"host": "10.10.1.43", "port": 502, "unit_id": 1},
+        "registers": [
+            {"name": "oil_temp", "address": 100, "type": "holding", "data_type": "float32", "scale": 0.1, "offset": 0, "unit": "°C", "telemetry_field": "oil_temperature"},
+            {"name": "load_pct", "address": 104, "type": "holding", "data_type": "float32", "scale": 0.1, "offset": 0, "unit": "%", "telemetry_field": "load_percentage"},
+        ],
+        "poll_interval_seconds": 60,
+        "enabled": True,
+        "status": "connected",
+    },
+    "BR-2201": {
+        "asset_id": "BR-2201",
+        "device_type": "pmcu",
+        "protocol": "dnp3",
+        "connection": {"host": "10.10.2.22", "port": 20000, "unit_id": 1},
+        "registers": [
+            {"name": "vib", "address": 200, "type": "holding", "data_type": "float32", "scale": 0.01, "offset": 0, "unit": "mm/s", "telemetry_field": "vibration"},
+        ],
+        "poll_interval_seconds": 30,
+        "enabled": True,
+        "status": "disconnected",
+    },
+    "TR-9001": {
+        "asset_id": "TR-9001",
+        "device_type": "dtc",
+        "protocol": "modbus_tcp",
+        "connection": {"host": "10.10.3.01", "port": 502, "unit_id": 1},
+        "registers": [
+            {"name": "oil_temp", "address": 100, "type": "holding", "data_type": "float32", "scale": 0.1, "offset": 0, "unit": "°C", "telemetry_field": "oil_temperature"},
+            {"name": "load_pct", "address": 104, "type": "holding", "data_type": "float32", "scale": 0.1, "offset": 0, "unit": "%", "telemetry_field": "load_percentage"},
+            {"name": "vibration", "address": 108, "type": "holding", "data_type": "float32", "scale": 0.01, "offset": 0, "unit": "mm/s", "telemetry_field": "vibration"},
+        ],
+        "poll_interval_seconds": 30,
+        "enabled": True,
+        "status": "connected",
+    },
+}
+
+
+def get_hardware_config(asset_id: str) -> Optional[dict]:
+    return HARDWARE_CONFIGS.get(asset_id)
+
+
+def get_all_hardware_configs() -> List[dict]:
+    return list(HARDWARE_CONFIGS.values())

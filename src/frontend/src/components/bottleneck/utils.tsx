@@ -65,13 +65,13 @@ export function statusColor(status: string): string {
 
 export function assetTypeIcon(type: string): string {
   switch (type) {
-    case 'transformer':    return '⚡'
-    case 'feeder':         return '🔌'
-    case 'breaker':        return '🔧'
-    case 'recloser':       return '🔄'
-    case 'switch':         return '🔀'
-    case 'capacitor_bank': return '🔋'
-    default:               return '⚙️'
+    case 'transformer':    return 'TR'
+    case 'feeder':         return 'FD'
+    case 'breaker':        return 'BR'
+    case 'recloser':       return 'RC'
+    case 'switch':         return 'SW'
+    case 'capacitor_bank': return 'CB'
+    default:               return '??'
   }
 }
 
