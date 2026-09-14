@@ -45,16 +45,53 @@ def _compute_for_asset(
     grid_impact = compute_grid_impact(asset)
     risk        = compute_risk(asset, prediction, grid_impact, weather)
     maint       = build_maintenance_recommendation(asset, risk, priority_override or 0)
+
+    # Log prediction for monitoring (only non-scenario predictions; scenarios are ephemeral)
+    if scenario is None:
+        try:
+            import os
+            if os.environ.get("GRIDSHIELD_USE_REAL_ML", "0") == "1":
+                from backend.gridshield.ml.monitoring.monitor import log_prediction, PredictionLogEntry
+                from datetime import datetime as _dt
+                log_prediction(PredictionLogEntry(
+                    asset_id                = prediction.asset_id,
+                    timestamp               = _dt.utcnow(),
+                    failure_probability_24h = prediction.failure_probability_24h,
+                    failure_probability_72h = prediction.failure_probability_72h,
+                    anomaly_score           = prediction.anomaly_score,
+                    health_score            = prediction.health_score,
+                    confidence              = prediction.confidence,
+                    model_version           = prediction.model_version,
+                    is_fallback             = "+heuristic" in prediction.model_version,
+                ))
+        except Exception:
+            pass  # Monitoring must never break prediction
+
     return prediction, grid_impact, weather, risk, maint
 
 
+import threading
+
+_ranking_cache = {}
+_ranking_lock = threading.Lock()
+
 def get_full_ranking(scenario: Optional[str] = None) -> List[RiskRankingEntry]:
     """Compute ranked risk assessment for all assets."""
-    entries = []
-    available_crews = list(CREWS)
+    global _ranking_cache
+    cache_key = scenario or "default"
+    
+    with _ranking_lock:
+        now = datetime.now()
+        if cache_key in _ranking_cache:
+            cache_time, cached_ranking = _ranking_cache[cache_key]
+            if (now - cache_time).total_seconds() < 15:
+                return cached_ranking
 
-    # Phase 1: compute all risks
-    intermediate = []
+        entries = []
+        available_crews = list(CREWS)
+    
+        # Phase 1: compute all risks
+        intermediate = []
     for asset in ASSETS:
         pred, impact, wx, risk, _ = _compute_for_asset(asset, scenario=scenario)
         intermediate.append((asset, pred, impact, wx, risk))
@@ -82,6 +119,9 @@ def get_full_ranking(scenario: Optional[str] = None) -> List[RiskRankingEntry]:
             weather=wx,
             maintenance=maint,
         ))
+
+    with _ranking_lock:
+        _ranking_cache[cache_key] = (datetime.now(), entries)
 
     return entries
 

@@ -368,3 +368,133 @@ def get_chat_session(session_id: str):
     if session_id not in _chat_sessions:
         raise HTTPException(status_code=404, detail="Session not found")
     return _chat_sessions[session_id]
+
+
+# ─── ML Model Status & Management ────────────────────────────────────────────
+
+@router.get("/model/status")
+def model_status():
+    """
+    Returns the current ML model health, version, and drift/anomaly alerts.
+    Safe to call even when models are not yet trained (returns degraded status).
+    """
+    from backend.gridshield.ml.inference.predict_service import models_loaded
+    from backend.gridshield.ml.monitoring.monitor import get_health_report
+    import os
+
+    report = get_health_report()
+    use_real = os.environ.get("GRIDSHIELD_USE_REAL_ML", "0") == "1"
+
+    return {
+        "ml_enabled"        : use_real,
+        "models_loaded"     : models_loaded() if use_real else False,
+        "status"            : report.status,
+        "model_version"     : report.model_version,
+        "total_predictions" : report.total_predictions,
+        "unique_assets"     : report.unique_assets,
+        "mean_p24"          : report.mean_p24,
+        "mean_anomaly_score": report.mean_anomaly_score,
+        "mean_confidence"   : report.mean_confidence,
+        "fallback_rate"     : report.fallback_rate,
+        "anomaly_rate_alert": report.anomaly_rate_alert,
+        "drift_alerts"      : report.drift_alerts,
+        "baseline_p24"      : report.baseline_p24,
+        "generated_at"      : report.generated_at,
+    }
+
+
+@router.get("/model/metrics")
+def model_metrics():
+    """
+    Returns last saved evaluation metrics from the training pipeline.
+    Returns 404 if models have not been trained yet.
+    """
+    import json
+    from pathlib import Path
+    models_dir = Path(__file__).resolve().parents[2] / "models" / "gridshield"
+
+    # Try combined evaluation report first
+    eval_path = models_dir / "evaluation_report.json"
+    if eval_path.exists():
+        with open(eval_path) as f:
+            return json.load(f)
+
+    # Fall back to individual metadata files
+    result = {}
+    for name in ("failure_24h", "failure_72h", "anomaly"):
+        meta_path = models_dir / f"{name}_metadata.json"
+        if meta_path.exists():
+            with open(meta_path) as f:
+                result[name] = json.load(f)
+
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail="No model metrics found. Run the training pipeline first: "
+                   "python -m backend.gridshield.ml.training.train_models"
+        )
+    return result
+
+
+@router.post("/model/retrain")
+def trigger_retrain(background_tasks=None):
+    """
+    Triggers a full ML retraining pipeline in a background thread.
+    Returns immediately with a job ID; check /api/gs/model/status for progress.
+
+    Pipeline:
+      1. Generate fresh training data from the 30-asset synthetic fleet
+      2. Build feature matrix
+      3. Train XGBoost failure_24h, failure_72h, and anomaly models
+      4. Evaluate and save artifacts
+      5. Reload models into inference service
+    """
+    import threading
+
+    job_id = f"retrain_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+
+    def _run():
+        import traceback
+        try:
+            print(f"[Retrain] Starting job {job_id}")
+
+            # Step 1: Generate data
+            from backend.gridshield.ml.data.generate_training_data import generate
+            generate(save=True)
+
+            # Step 2+3+4: Train all models
+            from backend.gridshield.ml.training.train_models import run_training_pipeline
+            run_training_pipeline()
+
+            # Step 5: Reload models
+            from backend.gridshield.ml.inference.predict_service import reload_models
+            ok = reload_models()
+
+            # Update monitoring baseline
+            from pathlib import Path
+            import json
+            summary_path = Path(__file__).resolve().parents[2] / "models" / "gridshield" / "training_summary.json"
+            if summary_path.exists():
+                with open(summary_path) as f:
+                    s = json.load(f)
+                pos_rate = s.get("failure_24h", {}).get("positive_rate_train", 0.15)
+                from backend.gridshield.ml.monitoring.monitor import set_baseline, clear_logs
+                set_baseline(pos_rate)
+                clear_logs()
+
+            print(f"[Retrain] Job {job_id} complete — models_loaded={ok}")
+
+        except Exception:
+            print(f"[Retrain] Job {job_id} FAILED:")
+            traceback.print_exc()
+
+    t = threading.Thread(target=_run, daemon=True, name=f"retrain-{job_id}")
+    t.start()
+
+    return {
+        "job_id"  : job_id,
+        "status"  : "started",
+        "message" : "Retraining started in background. "
+                    "Poll GET /api/gs/model/status for progress.",
+    }
+

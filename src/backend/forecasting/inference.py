@@ -45,12 +45,17 @@ def _load_wind_calibration() -> dict:
 def _load_solar_model():
     global _solar_model, _solar_features
     if _solar_model is None:
-        import xgboost as xgb
         model_path = MODELS_DIR / "solar" / "solar_hybrid.json"
         if not model_path.exists():
-            raise FileNotFoundError(f"Solar model not found: {model_path}")
-        _solar_model = xgb.XGBRegressor()
-        _solar_model.load_model(str(model_path))
+            import joblib
+            model_path = MODELS_DIR / "solar" / "solar_best.joblib"
+            if not model_path.exists():
+                raise FileNotFoundError(f"Solar model not found")
+            _solar_model = joblib.load(str(model_path))
+        else:
+            import xgboost as xgb
+            _solar_model = xgb.XGBRegressor()
+            _solar_model.load_model(str(model_path))
         features_path = MODELS_DIR / "solar" / "feature_cols.json"
         _solar_features = json.loads(features_path.read_text())
     return _solar_model, _solar_features
@@ -71,21 +76,23 @@ def _load_solar_quantile():
 def _load_wind_model():
     global _wind_model, _wind_features
     if _wind_model is None:
-        import xgboost as xgb
         model_path = MODELS_DIR / "wind" / "wind_xgboost.json"
         if not model_path.exists():
-            # Fallback to LightGBM format
-            try:
-                import lightgbm as lgb
-                model_path = MODELS_DIR / "wind" / "wind_lgbm.txt"
-                _wind_model = lgb.Booster(model_file=str(model_path))
-                features_path = MODELS_DIR / "wind" / "feature_cols.json"
-                _wind_features = json.loads(features_path.read_text())
-                return _wind_model, _wind_features
-            except Exception:
-                raise FileNotFoundError(f"Wind model not found")
-        _wind_model = xgb.XGBRegressor()
-        _wind_model.load_model(str(model_path))
+            import joblib
+            model_path = MODELS_DIR / "wind" / "wind_best.joblib"
+            if model_path.exists():
+                _wind_model = joblib.load(str(model_path))
+            else:
+                try:
+                    import lightgbm as lgb
+                    model_path = MODELS_DIR / "wind" / "wind_lgbm.txt"
+                    _wind_model = lgb.Booster(model_file=str(model_path))
+                except Exception:
+                    raise FileNotFoundError(f"Wind model not found")
+        else:
+            import xgboost as xgb
+            _wind_model = xgb.XGBRegressor()
+            _wind_model.load_model(str(model_path))
         features_path = MODELS_DIR / "wind" / "feature_cols.json"
         _wind_features = json.loads(features_path.read_text())
     return _wind_model, _wind_features
