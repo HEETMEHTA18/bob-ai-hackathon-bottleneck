@@ -4,10 +4,10 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=sqlite+aiosqlite:///./gridmind.db
+      - DATABASE_URL=sqlite+aiosqlite:///./bottleneck.db
       - SECRET_KEY=gm-dev-secret-key-change-in-production
     volumes:
-      - ./gridmind.db:/app/gridmind.db
+      - ./bottleneck.db:/app/bottleneck.db
       - ./models:/app/models
     restart: unless-stopped
     healthcheck:

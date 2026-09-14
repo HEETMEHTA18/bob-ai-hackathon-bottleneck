@@ -1,7 +1,7 @@
 """
 Bottleneck — Grid Operations Advisor Copilot.
 
-Transforms the Gridkavach Gemini copilot into a grounded Grid Operations Advisor.
+Transforms the Bottleneck Gemini copilot into a grounded Grid Operations Advisor.
 
 Rules:
   - Must ONLY use structured backend data — never invent sensor values,
@@ -18,7 +18,7 @@ from datetime import datetime
 from backend.bottleneck.contracts import RiskRankingEntry, RiskAssessment
 
 
-# ─── LLM key detection (reuse Gridkavach pattern) ────────────────────────────
+# ─── LLM key detection (reuse Bottleneck pattern) ────────────────────────────
 
 _GEMINI_KEY: Optional[str] = None
 _GEMINI_CONFIGURED = False
@@ -45,7 +45,7 @@ def _has_llm_key() -> bool:
 
 # ─── System prompt for Bottleneck domain ─────────────────────────────────────
 
-GRIDSHIELD_SYSTEM_PROMPT = """You are Bottleneck AI — an expert Grid Operations Advisor for a power utility.
+BOTTLENECK_SYSTEM_PROMPT = """You are Bottleneck AI — an expert Grid Operations Advisor for a power utility.
 You help field supervisors and control-room engineers make fast, accurate decisions about grid equipment failures.
 
 ## Response Format
@@ -111,13 +111,13 @@ def _build_asset_context(entry: RiskRankingEntry) -> str:
     return ctx
 
 
-def _ask_gemini_gridshield(message: str, context: str, history: list) -> Optional[str]:
+def _ask_gemini_bottleneck(message: str, context: str, history: list) -> Optional[str]:
     """Call Gemini with Bottleneck grounded context."""
     if not _has_llm_key():
         return None
     try:
         import google.generativeai as genai
-        full_system = f"{GRIDSHIELD_SYSTEM_PROMPT}\n\n## Current Data\n{context}"
+        full_system = f"{BOTTLENECK_SYSTEM_PROMPT}\n\n## Current Data\n{context}"
         gemini_history = []
         for msg in history[-6:]:
             role = "user" if msg.get("role") == "user" else "model"
@@ -282,7 +282,7 @@ def bottleneck_advisor(
         ctx = "\n".join(_build_asset_context(e) for e in top5)
 
     # Try LLM first
-    llm_response = _ask_gemini_gridshield(message, ctx, history)
+    llm_response = _ask_gemini_bottleneck(message, ctx, history)
     if llm_response:
         return llm_response
 

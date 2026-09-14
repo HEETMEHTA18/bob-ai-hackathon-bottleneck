@@ -50,7 +50,7 @@ def _compute_for_asset(
     if scenario is None:
         try:
             import os
-            if os.environ.get("GRIDSHIELD_USE_REAL_ML", "0") == "1":
+            if os.environ.get("BOTTLENECK_USE_REAL_ML", "0") == "1":
                 from backend.bottleneck.ml.monitoring.monitor import log_prediction, PredictionLogEntry
                 from datetime import datetime as _dt
                 log_prediction(PredictionLogEntry(

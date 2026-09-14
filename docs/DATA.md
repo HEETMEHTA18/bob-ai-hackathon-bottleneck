@@ -1,4 +1,4 @@
-# GridShield AI — Data Strategy
+# Bottleneck AI — Data Strategy
 
 ## Sources
 ### Public/live

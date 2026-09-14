@@ -3,7 +3,7 @@ Bottleneck ML — Training Data Generator
 ========================================
 Generates a per-TIMESTAMP labelled dataset from the project's 30-asset synthetic fleet.
 
-Key design decisions (fixing the gridshield-ml label-leakage problem):
+Key design decisions (fixing the bottleneck-ml label-leakage problem):
   - Labels are per-row, NOT per-asset. A row gets label=1 only if the asset's
     telemetry is within the final 24 h / 72 h of its simulated degradation window.
   - Degradation curves ramp from a configurable onset point; the failure point is

@@ -16,7 +16,7 @@ def raw(method, path, token=None, body=None):
     except urllib.error.HTTPError as e:
         return {"_error": e.code, "_body": e.read().decode()[:500]}
 
-tok = req("POST", "/auth/login", body={"email": "demo@gridmind.com", "password": "demo1234"})["access_token"]
+tok = req("POST", "/auth/login", body={"email": "demo@bottleneck.com", "password": "demo1234"})["access_token"]
 sites = raw("GET", "/sites/", token=tok)
 print("GET /sites/ ->", json.dumps(sites)[:200] if not isinstance(sites, list) else f"list of {len(sites)}")
 

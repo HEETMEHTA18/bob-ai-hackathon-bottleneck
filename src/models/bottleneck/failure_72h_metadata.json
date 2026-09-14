@@ -1,7 +1,7 @@
 {
-  "model_version": "gridshield-failure-v2",
-  "model_name": "failure_24h",
-  "trained_at": "2026-09-14T12:04:03.637275",
+  "model_version": "bottleneck-failure-v2",
+  "model_name": "failure_72h",
+  "trained_at": "2026-09-14T12:04:03.642402",
   "feature_list": [
     "oil_temp_current",
     "oil_temp_mean_1h",
@@ -40,19 +40,19 @@
     "days_since_maintenance"
   ],
   "hyperparameters": {
-    "pr_auc": 0.0943,
+    "pr_auc": 0.2623,
     "roc_auc": 0.5,
     "recall": 0.0,
     "precision": 0.0,
     "f1": 0.0,
-    "brier": 0.0943,
+    "brier": 0.2154,
     "confusion_matrix": [
       [
-        5869,
+        4780,
         0
       ],
       [
-        611,
+        1700,
         0
       ]
     ],
@@ -61,10 +61,10 @@
     "val_rows": 6510,
     "test_rows": 6480,
     "positive_rate_train": 0.0,
-    "positive_rate_test": 0.0943,
+    "positive_rate_test": 0.2623,
     "scale_pos_weight": 30210.0,
-    "best_n_estimators": 300,
-    "target": "failure_within_24h",
+    "best_n_estimators": 1,
+    "target": "failure_within_72h",
     "feature_importance": {
       "days_since_maintenance": 0.0,
       "previous_failures": 0.0,
@@ -104,19 +104,19 @@
     }
   },
   "metrics": {
-    "pr_auc": 0.0943,
+    "pr_auc": 0.2623,
     "roc_auc": 0.5,
     "recall": 0.0,
     "precision": 0.0,
     "f1": 0.0,
-    "brier": 0.0943,
+    "brier": 0.2154,
     "confusion_matrix": [
       [
-        5869,
+        4780,
         0
       ],
       [
-        611,
+        1700,
         0
       ]
     ],
@@ -125,8 +125,8 @@
     "val_rows": 6510,
     "test_rows": 6480,
     "positive_rate_train": 0.0,
-    "positive_rate_test": 0.0943,
+    "positive_rate_test": 0.2623,
     "scale_pos_weight": 30210.0,
-    "best_n_estimators": 300
+    "best_n_estimators": 1
   }
 }

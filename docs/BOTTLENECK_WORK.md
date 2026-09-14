@@ -1,14 +1,14 @@
-# GridShield — IBM Bob Master Work Specification
+# Bottleneck — IBM Bob Master Work Specification
 
 ## Project
-- Project name: GridShield
-- Starting codebase: Gridkavach
+- Project name: Bottleneck
+- Starting codebase: Bottleneck
 - Hackathon track: IBM Bob AI Hackathon 2026 — U1
 - U1: Power Outage Prediction & Grid Equipment Failure Advisor
 
 ## Mission
 
-Transform the existing Gridkavach renewable-energy forecasting application into a complete, runnable GridShield application while preserving useful engineering infrastructure.
+Transform the existing Bottleneck renewable-energy forecasting application into a complete, runnable Bottleneck application while preserving useful engineering infrastructure.
 
 Target workflow:
 
@@ -28,7 +28,7 @@ The real ML pipeline is being developed separately by another teammate.
 # 1. Rules
 
 1. Do not start from a blank project.
-2. Audit Gridkavach before making destructive changes.
+2. Audit Bottleneck before making destructive changes.
 3. Reuse useful FastAPI, React/TypeScript, weather, charts, maps, validation, testing, Docker and model-infrastructure patterns.
 4. Do not blindly rename strings; transform the domain.
 5. Frontend must use APIs, not direct DB/ML access.
@@ -63,10 +63,10 @@ Reusable infrastructure.
 Infrastructure that can be adapted.
 
 ### REMOVE/DEPRECATE
-Renewable-only functionality that should no longer be part of the primary GridShield UX.
+Renewable-only functionality that should no longer be part of the primary Bottleneck UX.
 
 ### CREATE
-New GridShield functionality.
+New Bottleneck functionality.
 
 Do not delete code until dependencies are understood.
 
@@ -82,7 +82,7 @@ with:
 
 Grid Asset → Asset Telemetry → Weather Exposure → Incident History → Failure Prediction → Grid Impact → Risk Score → Maintenance Prioritization → Crew Pre-Positioning → Grid Operations Command Center
 
-GridShield is not a renewable-energy forecasting product.
+Bottleneck is not a renewable-energy forecasting product.
 
 ---
 
@@ -281,7 +281,7 @@ This is a core differentiator.
 
 # 9. Weather Adapter
 
-Reuse Gridkavach's weather adapter pattern where useful.
+Reuse Bottleneck's weather adapter pattern where useful.
 
 Transform weather usage into asset exposure.
 
@@ -423,7 +423,7 @@ Use existing project conventions where possible. Do not create duplicate API fra
 
 ---
 
-# 14. Frontend — GridShield Command Center
+# 14. Frontend — Bottleneck Command Center
 
 Transform the renewable dashboard.
 
@@ -537,7 +537,7 @@ The scenario must update risk/ranking/maintenance/crew outputs coherently.
 
 # 19. Copilot
 
-If the existing Gridkavach Gemini/copilot infrastructure is reusable, transform it into a Grid Operations Advisor.
+If the existing Bottleneck Gemini/copilot infrastructure is reusable, transform it into a Grid Operations Advisor.
 
 It must be grounded in backend structured data.
 
@@ -561,7 +561,7 @@ If no LLM API key exists, the application must still work with a deterministic f
 
 # 20. Renewable Features to Remove from Primary UX
 
-Do not leave these as central GridShield features:
+Do not leave these as central Bottleneck features:
 - solar generation forecasting
 - wind generation forecasting
 - PV forecasting
@@ -648,10 +648,10 @@ Maintain:
 - BOB_ENGINEERING_LOG.md
 
 Document:
-- Gridkavach components reused
+- Bottleneck components reused
 - components transformed
 - components deprecated
-- new GridShield components
+- new Bottleneck components
 - mock ML boundary
 - future real ML integration
 - API contracts
@@ -715,7 +715,7 @@ Follow this order exactly:
 6. Grid impact engine
 7. Risk engine
 8. Backend APIs
-9. GridShield Command Center
+9. Bottleneck Command Center
 10. Asset Intelligence
 11. Maintenance Planner
 12. Crew Planner
@@ -758,7 +758,7 @@ Position crews before an outage.
 # 28. Definition of Done
 
 ### Application
-- GridShield branding
+- Bottleneck branding
 - Grid operations domain
 - runnable locally
 - command center
@@ -828,7 +828,7 @@ Maintenance      Crew
 Prioritization   Pre-positioning
  └───────────────┴────────────────┘
                   ↓
-          GridShield Command Center
+          Bottleneck Command Center
 
 The real teammate ML pipeline must later replace only the mock prediction implementation as far as practical.
 
@@ -845,7 +845,7 @@ After completing the work, report:
 5. Mock ML interface
 6. Exact steps to replace mock ML with the real teammate pipeline
 7. Tests/build/lint commands executed and results
-8. How to run GridShield locally
+8. How to run Bottleneck locally
 9. Remaining integration work
 10. Any known limitations
 

@@ -1,4 +1,4 @@
-# Problem Statement — GridShield AI
+# Problem Statement — Bottleneck AI
 
 ## IBM Bob Hackathon 2026 — Track U1: Power Outage Prediction & Grid Equipment Failure Advisor
 
@@ -52,7 +52,7 @@ A platform that:
 3. **Prioritizes** not just by failure probability, but by **operational impact** (customers, critical facilities, redundancy)
 4. **Positions** field crews *before* failures occur, reducing restoration time
 
-This is the GridShield mission: **PREDICT → EXPLAIN → PRIORITIZE → POSITION**
+This is the Bottleneck mission: **PREDICT → EXPLAIN → PRIORITIZE → POSITION**
 
 ---
 
@@ -65,4 +65,4 @@ This is the GridShield mission: **PREDICT → EXPLAIN → PRIORITIZE → POSITIO
 > - Generates prioritised maintenance plans
 > - Generates crew pre-positioning plans
 
-GridShield addresses all five requirements end-to-end.
+Bottleneck addresses all five requirements end-to-end.

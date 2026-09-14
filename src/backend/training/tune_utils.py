@@ -1,5 +1,5 @@
 """
-GridMind — Time-Series Model Tuning Utilities
+Bottleneck — Time-Series Model Tuning Utilities
 
 Shared, principled training helpers so solar/wind don't overfit or underfit:
   - strictly chronological splits (NO shuffling)

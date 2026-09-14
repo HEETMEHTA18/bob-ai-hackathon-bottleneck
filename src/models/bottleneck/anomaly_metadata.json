@@ -1,5 +1,5 @@
 {
-  "model_version": "gridshield-anomaly-v2",
+  "model_version": "bottleneck-anomaly-v2",
   "model_name": "anomaly",
   "trained_at": "2026-09-14T12:04:03.649758",
   "feature_list": [

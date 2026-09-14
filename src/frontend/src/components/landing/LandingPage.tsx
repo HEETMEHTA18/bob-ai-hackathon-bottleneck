@@ -98,7 +98,7 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
               <Zap className="h-4 w-4" />
             </div>
             <div>
-              <div className="text-sm font-bold tracking-tight text-zinc-900">GridMind AI</div>
+              <div className="text-sm font-bold tracking-tight text-zinc-900">Bottleneck AI</div>
               <div className="text-[10px] font-medium text-zinc-400">Renewable Energy Intelligence</div>
             </div>
           </a>
@@ -160,7 +160,7 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
             </span>
           </h1>
           <p className="mt-6 max-w-xl text-pretty text-base leading-relaxed text-zinc-500 sm:text-lg">
-            GridMind turns raw irradiance and wind into P10/P50/P90 forecasts,
+            Bottleneck turns raw irradiance and wind into P10/P50/P90 forecasts,
             flags curtailment before it costs you money, and tells you exactly
             when to charge, discharge, or sell back to the grid.
           </p>
@@ -289,7 +289,7 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
               Create an account, add a site, and watch the models go to work.
               Demo login:{" "}
               <span className="font-mono text-white" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-                demo@gridmind.com / demo1234
+                demo@bottleneck.com / demo1234
               </span>
             </p>
             <Button
@@ -308,7 +308,7 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 text-sm text-zinc-400 sm:flex-row">
           <div className="flex items-center gap-2">
             <Zap className="h-4 w-4 text-blue-600" />
-            <span className="font-medium text-zinc-600">GridMind AI</span>
+            <span className="font-medium text-zinc-600">Bottleneck AI</span>
           </div>
           <div className="flex items-center gap-6">
             <a href="#features" className="hover:text-zinc-800">Features</a>
@@ -332,7 +332,7 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                   {authMode === "login" ? "Welcome back" : "Create your account"}
                 </h3>
                 <p className="mt-1 text-sm text-zinc-400">
-                  {authMode === "login" ? "Sign in to your GridMind workspace." : "Start forecasting in minutes — no card needed."}
+                  {authMode === "login" ? "Sign in to your Bottleneck workspace." : "Start forecasting in minutes — no card needed."}
                 </p>
               </div>
               <button onClick={() => setAuthOpen(false)} className="rounded-lg p-1.5 text-zinc-400 hover:bg-black/5 hover:text-zinc-800" aria-label="Close">
@@ -344,7 +344,7 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
               <div className="mb-5 rounded-xl border border-blue-600/15 bg-blue-50 px-4 py-3 text-xs text-blue-700">
                 <div className="mb-2 font-medium">Quick Demo Access</div>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="font-mono" style={{ fontFamily: "'JetBrains Mono', monospace" }}>demo@gridmind.com / demo1234</span>
+                  <span className="font-mono" style={{ fontFamily: "'JetBrains Mono', monospace" }}>demo@bottleneck.com / demo1234</span>
                   <button
                     type="button"
                     className="shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm hover:bg-blue-700"
@@ -364,7 +364,7 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
               onSignup={onSignup}
               inputCls={inputCls}
               inputEl={inputEl}
-              defaultEmail={demoFill ? "demo@gridmind.com" : ""}
+              defaultEmail={demoFill ? "demo@bottleneck.com" : ""}
               defaultPassword={demoFill ? "demo1234" : ""}
             />
           </div>

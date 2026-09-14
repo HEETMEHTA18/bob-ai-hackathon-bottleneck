@@ -1,9 +1,9 @@
 #!/bin/bash
-# GridMind AI - Start Script
+# Bottleneck AI - Start Script
 DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$DIR"
 
-echo "⚡ GridMind AI v2.0 - Starting..."
+echo "⚡ Bottleneck AI v2.0 - Starting..."
 echo ""
 
 kill $(lsof -t -i:8000 2>/dev/null) 2>/dev/null || true
@@ -33,13 +33,13 @@ sleep 3
 echo "    ✅ Frontend running"
 echo ""
 echo "════════════════════════════════════════════════"
-echo "  GridMind AI is ready!"
+echo "  Bottleneck AI is ready!"
 echo ""
 echo "  Frontend:   http://localhost:5173"
 echo "  Backend:    http://localhost:8000"
 echo "  API Docs:   http://localhost:8000/docs"
 echo ""
-echo "  Demo login: demo@gridmind.com / demo123"
+echo "  Demo login: demo@bottleneck.com / demo123"
 echo "  (or create a new account on the login page)"
 echo ""
 echo "  Stop: kill \$(lsof -t -i:8000) \$(lsof -t -i:5173)"

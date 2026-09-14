@@ -1,5 +1,5 @@
 """
-Build a real-weather wind training dataset for GridMind.
+Build a real-weather wind training dataset for Bottleneck.
 
 Pipeline (same philosophy as build_dataset.py but for wind):
   1. Pull real hourly 10 m wind speed/direction, temperature, pressure from the
@@ -89,7 +89,7 @@ def build_wind_dataset(site_params, start_date, end_date, out_name="wind_generat
 
 
 if __name__ == "__main__":
-    p = argparse.ArgumentParser(description="Build GridMind wind training dataset")
+    p = argparse.ArgumentParser(description="Build Bottleneck wind training dataset")
     p.add_argument("--start", default="2024-01-01")
     p.add_argument("--end", default="2024-12-31")
     p.add_argument("--lat", type=float, default=WIND_SITE["latitude"])

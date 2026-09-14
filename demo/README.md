@@ -1,4 +1,4 @@
-# Demo — GridShield AI
+# Demo — Bottleneck AI
 
 ## IBM Bob Hackathon 2026 — Track U1
 
@@ -9,7 +9,7 @@
 The demo is designed around a single grid operations story:
 
 > **A critical transformer (TR-1042) is showing signs of imminent failure.
-> GridShield detects it, explains why, ranks it #1, plans maintenance,
+> Bottleneck detects it, explains why, ranks it #1, plans maintenance,
 > and pre-positions a crew — before any outage occurs.**
 
 ### Walkthrough Steps

@@ -1,13 +1,13 @@
 services:
   - type: web
-    name: gridmind-ai
+    name: bottleneck-ai
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt && cd frontend && npm ci && npm run build
     startCommand: python3 -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: DATABASE_URL
-        value: sqlite+aiosqlite:///./gridmind.db
+        value: sqlite+aiosqlite:///./bottleneck.db
       - key: SECRET_KEY
         generateValue: true
       - key: PYTHON_VERSION

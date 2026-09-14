@@ -2,7 +2,7 @@
 """
 benchmark.py — Honest external model benchmark
 
-Compares the deployed GridMind models (SURGE solar XGBoost + physics, SURGE wind
+Compares the deployed Bottleneck models (SURGE solar XGBoost + physics, SURGE wind
 LightGBM) against standard baseline methods on the SAME out-of-sample window.
 
 Baselines:

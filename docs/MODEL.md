@@ -1,5 +1,5 @@
 # MODEL.md
-## GridMind AI — Model Development Specification
+## Bottleneck AI — Model Development Specification
 ### Forecast Engine: Architecture, Parameters, Training Protocol & Resources
 
 **Scope:** This document is the single source of truth for model development. It covers the solar hybrid model, the wind ML model, the uncertainty layer, feature schemas, hyperparameter grids, evaluation protocol, and every external resource (datasets, libraries, docs) needed to build it. Aligned with `TRD.md` §5 and `work1.md` Phases 2–4.

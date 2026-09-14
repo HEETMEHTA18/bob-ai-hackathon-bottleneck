@@ -4,8 +4,8 @@ Bottleneck — ML Adapter.
 Integration seam between the risk/API layer and the ML prediction pipeline.
 
 Switch between implementations via environment variable:
-    GRIDSHIELD_USE_REAL_ML=1  →  XGBoost RealFailurePredictor
-    GRIDSHIELD_USE_REAL_ML=0  →  deterministic MockFailurePredictor (default)
+    BOTTLENECK_USE_REAL_ML=1  →  XGBoost RealFailurePredictor
+    BOTTLENECK_USE_REAL_ML=0  →  deterministic MockFailurePredictor (default)
 
 The FailurePrediction contract never changes — only the implementation swaps.
 """
@@ -20,7 +20,7 @@ from backend.bottleneck.contracts import (
     Asset,
 )
 
-logger = logging.getLogger("gridshield.ml_adapter")
+logger = logging.getLogger("bottleneck.ml_adapter")
 
 
 # ─── Abstract interface (the stable seam) ────────────────────────────────────
@@ -227,7 +227,7 @@ class ScenarioFailurePredictor(FailurePredictor):
 class RealFailurePredictor(FailurePredictor):
     """
     Production predictor backed by the XGBoost pipeline in
-    backend/gridshield/ml/inference/predict_service.py.
+    backend/bottleneck/ml/inference/predict_service.py.
 
     Converts backend contract objects (TelemetryRecord, WeatherExposure, Asset,
     Incident) into the feature dict expected by the inference service,
@@ -236,7 +236,7 @@ class RealFailurePredictor(FailurePredictor):
     All edge-cases (missing models, NaN features, failed inference) are handled
     inside predict_service.predict() — this class just translates the types.
     """
-    MODEL_VERSION = "gridshield-failure-v2"
+    MODEL_VERSION = "bottleneck-failure-v2"
 
     def __init__(self) -> None:
         # Lazy import so the server starts even if XGBoost is not installed yet
@@ -386,14 +386,14 @@ def get_predictor(scenario: Optional[str] = None) -> FailurePredictor:
     """
     Factory — returns the active predictor.
 
-    GRIDSHIELD_USE_REAL_ML=1  → XGBoost RealFailurePredictor
-    GRIDSHIELD_USE_REAL_ML=0  → MockFailurePredictor (deterministic demo)
+    BOTTLENECK_USE_REAL_ML=1  → XGBoost RealFailurePredictor
+    BOTTLENECK_USE_REAL_ML=0  → MockFailurePredictor (deterministic demo)
 
     On scenario:
       Real mode  → RealScenarioFailurePredictor (real predictions + scenario delta)
       Mock mode  → ScenarioFailurePredictor (mock predictions + scenario delta)
     """
-    use_real = os.environ.get("GRIDSHIELD_USE_REAL_ML", "0") == "1"
+    use_real = os.environ.get("BOTTLENECK_USE_REAL_ML", "0") == "1"
 
     if use_real:
         try:

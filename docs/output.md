@@ -1,4 +1,4 @@
-# GridKavach — GridMind SURGE Forecaster: Metrics, Maths & Baseline Comparison
+# Bottleneck — Bottleneck SURGE Forecaster: Metrics, Maths & Baseline Comparison
 
 **Publication-stage report** · generated 2026-09-13 · honest, reproducible, real-data
 
@@ -267,5 +267,5 @@ Everything above is packaged in `hf_release/` and verified:
 
 **One command to publish:**
 ```bash
-cd hf_release && HF_TOKEN=hf_xxxxxxxx python3 publish.py --repo gridkavach/gridmind-solar-forecast
+cd hf_release && HF_TOKEN=hf_xxxxxxxx python3 publish.py --repo bottleneck/bottleneck-solar-forecast
 ```

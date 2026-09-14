@@ -41,9 +41,9 @@ _ROOT = Path(__file__).resolve().parents[4]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-MODELS_DIR = Path(os.environ.get("GRIDSHIELD_MODELS_DIR", str(_ROOT / "models" / "gridshield")))
+MODELS_DIR = Path(os.environ.get("BOTTLENECK_MODELS_DIR", str(_ROOT / "models" / "bottleneck")))
 
-logger = logging.getLogger("gridshield.ml.inference")
+logger = logging.getLogger("bottleneck.ml.inference")
 
 # ─── Thread-safe model cache ──────────────────────────────────────────────────
 
@@ -319,7 +319,7 @@ def predict(
     if not _models_ready:
         reload_models()
 
-    mv = (_meta24 or {}).get("model_version", "gridshield-failure-v2")
+    mv = (_meta24 or {}).get("model_version", "bottleneck-failure-v2")
 
     # ── Fallback path ──────────────────────────────────────────────────────────
     if not _models_ready or _m24 is None:

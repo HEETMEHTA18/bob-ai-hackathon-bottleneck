@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-GridMind AI — Data Pipeline Setup
+Bottleneck AI — Data Pipeline Setup
 Connects live data, downloads datasets, trains models, and verifies everything.
 
 Usage:
@@ -201,7 +201,7 @@ async def print_status():
         forecasts = (await db.execute(select(func.count(Forecast.id)))).scalar()
     
     print("\n" + "=" * 50)
-    print("  📊 GridMind AI — System Status")
+    print("  📊 Bottleneck AI — System Status")
     print("=" * 50)
     print(f"  Users:       {users}")
     print(f"  Sites:       {sites}")
@@ -212,7 +212,7 @@ async def print_status():
 
 # ─── Main ─────────────────────────────────────────────────────
 async def main():
-    parser = argparse.ArgumentParser(description="GridMind AI Data Pipeline")
+    parser = argparse.ArgumentParser(description="Bottleneck AI Data Pipeline")
     parser.add_argument("--live-only", action="store_true", help="Only fetch live weather")
     parser.add_argument("--train-only", action="store_true", help="Only train models")
     parser.add_argument("--import-csv", type=str, help="Import a CSV file")
@@ -220,7 +220,7 @@ async def main():
     parser.add_argument("--generate-data", action="store_true", help="Only generate synthetic data")
     args = parser.parse_args()
     
-    print("⚡ GridMind AI — Data Pipeline")
+    print("⚡ Bottleneck AI — Data Pipeline")
     print("=" * 50)
     
     await init_db()

@@ -22,7 +22,7 @@ _ROOT = Path(__file__).resolve().parents[4]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-MODELS_DIR = _ROOT / "models" / "gridshield"
+MODELS_DIR = _ROOT / "models" / "bottleneck"
 DATA_DIR   = _ROOT / "data"
 
 
@@ -35,7 +35,7 @@ def evaluate_failure_model(
     """
     Load the saved XGBoost model and evaluate against the held-out test split.
 
-    Returns a metrics dict and optionally writes it to  models/gridshield/<model_name>_eval.json.
+    Returns a metrics dict and optionally writes it to  models/bottleneck/<model_name>_eval.json.
     """
     import xgboost as xgb
     from sklearn.metrics import (

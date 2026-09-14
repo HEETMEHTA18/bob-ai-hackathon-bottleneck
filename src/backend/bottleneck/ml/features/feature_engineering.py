@@ -311,7 +311,7 @@ def attach_asset_features(features_df: pd.DataFrame,
                            assets_df: pd.DataFrame) -> pd.DataFrame:
     """
     Left-join asset static features onto the feature matrix.
-    Handles both float criticality (contracts.py) and string (gridshield-ml legacy).
+    Handles both float criticality (contracts.py) and string (bottleneck-ml legacy).
     """
     keep = ["asset_id", "asset_age", "capacity_mva", "customers_served",
             "criticality", "redundancy_level", "previous_failures",

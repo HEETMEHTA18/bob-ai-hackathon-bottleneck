@@ -2,7 +2,7 @@ import sqlite3
 import json
 from pathlib import Path
 
-DB_PATH = Path(__file__).parent.parent / "gridmind.db"
+DB_PATH = Path(__file__).parent.parent / "bottleneck.db"
 
 
 def get_db():

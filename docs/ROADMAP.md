@@ -1,4 +1,4 @@
-# GridShield AI — 4-Day Roadmap
+# Bottleneck AI — 4-Day Roadmap
 
 ## Day 1 — Foundations
 Team 1:

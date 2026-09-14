@@ -37,7 +37,7 @@ router = APIRouter(prefix="/api/bottleneck", tags=["Bottleneck"])
 gs_alias_router = APIRouter(prefix="/api/gs", tags=["Bottleneck (GS Alias)"])
 
 
-# In-memory chat session store (same pattern as Gridkavach chat.py)
+# In-memory chat session store (same pattern as Bottleneck chat.py)
 _chat_sessions: dict[str, dict] = {}
 
 
@@ -383,7 +383,7 @@ def model_status():
     import os
 
     report = get_health_report()
-    use_real = os.environ.get("GRIDSHIELD_USE_REAL_ML", "0") == "1"
+    use_real = os.environ.get("BOTTLENECK_USE_REAL_ML", "0") == "1"
 
     return {
         "ml_enabled"        : use_real,
@@ -411,7 +411,7 @@ def model_metrics():
     """
     import json
     from pathlib import Path
-    models_dir = Path(__file__).resolve().parents[2] / "models" / "gridshield"
+    models_dir = Path(__file__).resolve().parents[2] / "models" / "bottleneck"
 
     # Try combined evaluation report first
     eval_path = models_dir / "evaluation_report.json"
@@ -473,7 +473,7 @@ def trigger_retrain(background_tasks=None):
             # Update monitoring baseline
             from pathlib import Path
             import json
-            summary_path = Path(__file__).resolve().parents[2] / "models" / "gridshield" / "training_summary.json"
+            summary_path = Path(__file__).resolve().parents[2] / "models" / "bottleneck" / "training_summary.json"
             if summary_path.exists():
                 with open(summary_path) as f:
                     s = json.load(f)

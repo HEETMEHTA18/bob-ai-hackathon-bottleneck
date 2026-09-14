@@ -1,4 +1,4 @@
-name: GridShield Validation
+name: Bottleneck Validation
 
 on:
   push:
@@ -78,9 +78,9 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run GridShield test suite
+      - name: Run Bottleneck test suite
         run: |
-          python3 -m pytest tests/test_gridshield.py -v --tb=short
+          python3 -m pytest tests/test_bottleneck.py -v --tb=short
 
   frontend-build:
     name: Frontend Build

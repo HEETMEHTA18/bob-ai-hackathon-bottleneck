@@ -49,11 +49,11 @@ from backend.bottleneck.ml.features.feature_engineering import (
 )
 
 DATA_DIR   = _ROOT / "data"
-MODELS_DIR = _ROOT / "models" / "gridshield"
+MODELS_DIR = _ROOT / "models" / "bottleneck"
 MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
-MODEL_VERSION_FAILURE = "gridshield-failure-v2"
-MODEL_VERSION_ANOMALY = "gridshield-anomaly-v2"
+MODEL_VERSION_FAILURE = "bottleneck-failure-v2"
+MODEL_VERSION_ANOMALY = "bottleneck-anomaly-v2"
 
 
 # ─── Data loading ─────────────────────────────────────────────────────────────

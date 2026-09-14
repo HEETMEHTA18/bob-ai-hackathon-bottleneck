@@ -1,4 +1,4 @@
-# Security Review Report — GridMind AI
+# Security Review Report — Bottleneck AI
 
 **Date:** 2024  
 **Reviewer:** Automated Security Scan  

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-retrain_surge.py — SURGE-Inspired Training Pipeline for GridMind AI
+retrain_surge.py — SURGE-Inspired Training Pipeline for Bottleneck AI
 
 Trains XGBoost models for solar and wind generation forecasting using SURGE's
 exact architecture: multi-model benchmarking, quantile regression (P10/P50/P90),
@@ -125,7 +125,7 @@ def surge_solar_features(df: pd.DataFrame, lat: float, lon: float) -> pd.DataFra
         df["temperature_2m"].rolling(window=3, min_periods=1).mean(), 2
     ) if "temperature_2m" in df.columns else 0.0
 
-    # Normalize column names from GridMind format to SURGE format
+    # Normalize column names from Bottleneck format to SURGE format
     col_map = {
         "ghi": "shortwave_radiation", "dni": "direct_normal_irradiance",
         "dhi": "diffuse_radiation", "temperature": "temperature_2m",
@@ -290,15 +290,15 @@ def quantile_coverage(y_true, p10, p90):
     return round(inside / len(y_true) * 100, 2) if len(y_true) > 0 else 0.0
 
 
-# ─── Load Training Data from GridMind DB ───────────────────────
+# ─── Load Training Data from Bottleneck DB ───────────────────────
 def load_weather_data(site_id: int = None) -> pd.DataFrame:
-    """Load weather data from GridMind's SQLite database."""
+    """Load weather data from Bottleneck's SQLite database."""
     import sqlite3
 
-    db_path = PROJECT_ROOT / "gridmind.db"
+    db_path = PROJECT_ROOT / "bottleneck.db"
     if not db_path.exists():
         # Try alternative locations
-        for p in [PROJECT_ROOT / "backend" / "gridmind.db", Path("gridmind.db")]:
+        for p in [PROJECT_ROOT / "backend" / "bottleneck.db", Path("bottleneck.db")]:
             if p.exists():
                 db_path = p
                 break

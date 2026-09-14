@@ -1,5 +1,5 @@
 """
-GENERIC multi-site, climate-aware training for GridMind SURGE.
+GENERIC multi-site, climate-aware training for Bottleneck SURGE.
 
 The point of this trainer: replace the site-specialist models (trained only on
 Bhadla/Jaisalmer) with models that are *generic across climate and geometry*.

@@ -1,4 +1,4 @@
-# GridShield AI — Technical Requirements Document
+# Bottleneck AI — Technical Requirements Document
 
 ## Architecture
 Use a modular monolith for the hackathon.
@@ -84,7 +84,7 @@ GET /api/health
   "failure_probability": 0.92,
   "confidence": 0.84,
   "risk_level": "CRITICAL",
-  "model_version": "gridshield-failure-v1"
+  "model_version": "bottleneck-failure-v1"
 }
 
 ## Integration rules

@@ -1,4 +1,4 @@
-# GridMind AI — Honest Model Benchmark
+# Bottleneck AI — Honest Model Benchmark
 
 Date: 2026-09-13 · Window: 720h synthetic (Jan 2024) · OOS: last 30% chronological
 Diebold–Mariano (HAC, loss = abs error), two-sided, vs the deployed model.

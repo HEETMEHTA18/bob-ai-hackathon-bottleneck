@@ -1,7 +1,7 @@
 """
 Bottleneck — Weather Adapter.
 
-Reuses Open-Meteo infrastructure from Gridkavach but transforms weather
+Reuses Open-Meteo infrastructure from Bottleneck but transforms weather
 data into asset exposure scores for grid equipment risk assessment.
 
 Falls back to deterministic mock data when the external API is unavailable,
