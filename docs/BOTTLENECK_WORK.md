@@ -50,7 +50,6 @@ Before major edits:
 - inspect frontend routes/pages/components
 - inspect DB/configuration
 - inspect forecasting/model/optimization code
-- inspect tests
 - inspect Docker/config files
 - inspect model/metric files
 

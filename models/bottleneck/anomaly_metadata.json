@@ -1,0 +1,61 @@
+{
+  "model_version": "bottleneck-anomaly-v2",
+  "model_name": "anomaly",
+  "trained_at": "2026-09-14T16:29:52.038897",
+  "feature_list": [
+    "oil_temp_current",
+    "oil_temp_mean_1h",
+    "oil_temp_mean_6h",
+    "oil_temp_mean_24h",
+    "oil_temp_trend",
+    "load_current",
+    "load_mean_6h",
+    "load_mean_24h",
+    "load_max_24h",
+    "load_trend",
+    "vibration_current",
+    "vibration_mean_6h",
+    "vibration_trend",
+    "pd_current",
+    "pd_trend",
+    "oil_quality_current",
+    "oil_quality_change",
+    "current_unbalance_current",
+    "voltage_deviation_current",
+    "ambient_temp_current"
+  ],
+  "hyperparameters": {
+    "mae": 0.0366,
+    "train_rows": 30210,
+    "test_rows": 6480,
+    "best_n_estimators": 101,
+    "feature_importance": {
+      "oil_quality_current": 0.160032,
+      "oil_temp_mean_1h": 0.129674,
+      "load_mean_6h": 0.097176,
+      "vibration_current": 0.096887,
+      "oil_temp_current": 0.088023,
+      "vibration_mean_6h": 0.061777,
+      "pd_current": 0.058703,
+      "voltage_deviation_current": 0.05247,
+      "oil_temp_mean_6h": 0.050987,
+      "load_mean_24h": 0.050048,
+      "oil_temp_mean_24h": 0.049667,
+      "load_current": 0.035433,
+      "load_max_24h": 0.029137,
+      "current_unbalance_current": 0.020778,
+      "oil_quality_change": 0.008263,
+      "ambient_temp_current": 0.003159,
+      "oil_temp_trend": 0.003153,
+      "pd_trend": 0.002196,
+      "vibration_trend": 0.001423,
+      "load_trend": 0.001012
+    }
+  },
+  "metrics": {
+    "mae": 0.0366,
+    "train_rows": 30210,
+    "test_rows": 6480,
+    "best_n_estimators": 101
+  }
+}
