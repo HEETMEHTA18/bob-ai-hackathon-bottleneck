@@ -15,20 +15,20 @@ submission:
   problem_statement: "Power Outage Prediction & Grid Equipment Failure Advisor"
 
   # ── Project ───────────────────────────────────────────────────
-  project_name: "GridShield AI"
+  project_name: "Bottleneck AI"
   tagline: "PREDICT → EXPLAIN → PRIORITIZE → POSITION"
   short_description: >
-    GridShield is an AI-powered grid reliability platform that combines
+    Bottleneck is an AI-powered grid reliability platform that combines
     asset telemetry, weather forecasts, and incident history to predict
     equipment failures, rank assets by operational risk, generate
     maintenance plans, and pre-position field crews before outages occur.
 
   # ── Repository ────────────────────────────────────────────────
   repository_url: "https://github.com/HEETMEHTA18/bob-ai-hackathon-bottleneck"
-  branch: "main"
+  branch: "fixed"
 
   # ── Demo ──────────────────────────────────────────────────────
-  demo_video_url: "https://youtu.be/placeholder-gridshield-demo"
+  demo_video_url: "https://youtu.be/placeholder-bottleneck-demo"
   live_demo_url: "NOT DEPLOYED"
 
   # ── Tech Stack ────────────────────────────────────────────────
@@ -38,7 +38,7 @@ submission:
       - "FastAPI"
       - "Pydantic v2"
       - "SQLAlchemy + aiosqlite"
-      - "Open-Meteo weather API"
+      - "XGBoost + Scikit-Learn"
     frontend:
       - "React 18"
       - "TypeScript"
@@ -46,9 +46,9 @@ submission:
       - "Recharts"
       - "Lucide Icons"
     ai:
-      - "IBM Bob (primary AI coding agent)"
+      - "Antigravity (primary AI agent)"
       - "Google Gemini 1.5 Flash (optional AI copilot)"
-      - "Deterministic Mock ML (demo mode, no key required)"
+      - "Real & Deterministic ML Engine"
     infrastructure:
       - "Docker"
       - "SQLite (dev) / PostgreSQL (prod)"
@@ -58,11 +58,9 @@ submission:
     primary_agent: true
     sessions_documented: "docs/BOB_ENGINEERING_LOG.md"
     summary: >
-      IBM Bob was used as the sole AI coding and development agent throughout
-      the GridShield migration from Gridkavach. Bob performed the repository
-      audit, designed the migration map, implemented all backend modules
-      (contracts, mock ML adapter, risk engine, grid impact engine, API routes),
-      built the full React/TypeScript frontend, and wrote the 44-test suite.
+      Antigravity was used as the AI coding and development agent to build
+      the Bottleneck grid reliability platform, implement backend modules,
+      train ML models, and build the React/TypeScript frontend.
 
   # ── Source Layout ─────────────────────────────────────────────
   source_root: "src"
@@ -74,9 +72,9 @@ submission:
   features:
     - "Impact-aware risk scoring (failure probability × grid impact × weather × criticality × redundancy)"
     - "30-asset synthetic fleet with realistic degradation profiles"
-    - "Deterministic mock ML with clean swap seam (MockFailurePredictor → RealFailurePredictor)"
-    - "Scenario simulator: Severe Storm / Heatwave / Asset Degradation"
+    - "XGBoost ML engine with real failure probability & anomaly detection"
+    - "Scenario simulator: Severe Storm / Heatwave / Asset Degradation / Load Surge"
     - "Crew pre-positioning by specialty and region"
-    - "Grounded AI copilot with fallback (works without API key)"
-    - "16 REST API endpoints under /api/gs/"
-    - "44 automated tests — all passing"
+    - "Grounded AI copilot for grid operations"
+    - "REST API endpoints under /api/bottleneck/"
+
