@@ -13,7 +13,6 @@ import {
   Globe,
   HardHat,
   Layers,
-  Loader2,
   Lock,
   Mail,
   MapPin,
@@ -24,7 +23,6 @@ import {
   ShieldAlert,
   Sparkles,
   Target,
-  Thermometer,
   TrendingUp,
   Users,
   Wind,
@@ -32,6 +30,7 @@ import {
   Zap,
   Activity,
   Bell,
+  GitBranch,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -43,39 +42,47 @@ interface LandingPageProps {
 
 const problemStats = [
   { value: "1.4B", label: "People served by India's grid" },
-  { value: "5–8h", label: "Avg outage duration (urban)" },
-  { value: "#1", label: "Transformer failures cause outages" },
-  { value: "24–72h", label: "Prediction horizon needed" },
+  { value: "5–8h",  label: "Avg outage duration (urban)" },
+  { value: "#1",    label: "Transformer failures cause outages" },
+  { value: "24–72h",label: "Prediction horizon needed" },
 ]
 
 const workflowSteps = [
   {
     icon: Search,
+    step: "01",
     title: "PREDICT",
-    desc: "ML models forecast 24h/72h failure probability for every transformer, feeder, and breaker using telemetry, weather, and incident history.",
+    desc: "XGBoost models forecast 24 h / 72 h failure probability for every transformer, feeder, and breaker using telemetry, weather, and incident history.",
     color: "#2563eb",
     bg: "#eff6ff",
+    border: "#bfdbfe",
   },
   {
     icon: Brain,
+    step: "02",
     title: "EXPLAIN",
-    desc: "Every risk score surfaces the exact drivers — anomalous temperature, vibration spikes, partial discharge, storm exposure, prior incidents.",
+    desc: "Every risk score surfaces the exact drivers — anomalous temperature, vibration spikes, partial discharge, storm exposure, and prior incidents.",
     color: "#7c3aed",
     bg: "#f5f3ff",
+    border: "#ddd6fe",
   },
   {
     icon: Target,
+    step: "03",
     title: "PRIORITIZE",
     desc: "Composite risk score (0–100) weights failure probability × grid impact × weather × criticality × (1−redundancy). High-impact assets rank first.",
-    color: "#eab308",
-    bg: "#fefce8",
+    color: "#d97706",
+    bg: "#fffbeb",
+    border: "#fde68a",
   },
   {
     icon: Compass,
+    step: "04",
     title: "POSITION",
-    desc: "Crew planner matches transformer specialists, line crews, and substation teams to at-risk assets by region, specialty, and availability.",
+    desc: "Crew planner matches transformer specialists, line crews, and substation teams to at-risk assets by region, specialty, and availability — before outages.",
     color: "#16a34a",
-    bg: "#ecfdf5",
+    bg: "#f0fdf4",
+    border: "#bbf7d0",
   },
 ]
 
@@ -97,47 +104,54 @@ const differentiators = [
   {
     icon: Cpu,
     title: "Clean ML Integration Seam",
-    desc: "The ML layer lives behind a stable FailurePredictor interface. Swap MockFailurePredictor → RealFailurePredictor in one file. Zero changes to risk engine, planners, or frontend. Model versions explicit, no data leakage.",
-    highlight: "Drop-in replacement for real ML pipeline",
-    color: "#8b5cf6",
+    desc: "The ML layer lives behind a stable FailurePredictor interface. Swap MockFailurePredictor → RealFailurePredictor in one file. Zero changes to risk engine, planners, or frontend.",
+    highlight: "Drop-in replacement for any future ML model",
+    color: "#0891b2",
   },
   {
     icon: Layers,
     title: "Scenario Simulation",
-    desc: "Operators run what-if scenarios: Severe Storm (weather exposure ↑), Heatwave (thermal/load stress ↑), Asset Degradation (accelerated aging). Full pipeline re-runs coherently — predictions → risk → maintenance → crew.",
+    desc: "Run what-if scenarios: Severe Storm, Heatwave, Asset Degradation. Full pipeline re-runs coherently — predictions → risk → maintenance → crew — in under 1 second.",
     highlight: "Before/after risk comparison in one view",
     color: "#16a34a",
   },
 ]
 
 const demoScenario = [
-  { step: 1, title: "Command Center", desc: "Open dashboard → TR-1042 ranked #1 critical (Risk 94/100, Health 38/100)" },
-  { step: 2, title: "Asset Intelligence", desc: "Drill down → 8,420 customers at risk, 3 critical facilities, high temp + vibration + overheating incident + severe weather" },
-  { step: 3, title: "Risk Breakdown", desc: "See exact drivers: p24=0.72, impact=0.91, weather=0.84, criticality=0.95, redundancy=0.15 → composite 94" },
-  { step: 4, title: "Maintenance Planner", desc: "TR-1042 Priority #1: Inspect within 6h, replace bushing, thermal scan. Reason: temp anomaly + PD spike + storm exposure" },
-  { step: 5, title: "Crew Planner", desc: "CREW-07 (transformer specialist, Region 3) pre-positioned 2.3km from asset. ETA 12 min. Backup: CREW-12" },
-  { step: 6, title: "Scenario Simulator", desc: "Run Severe Storm → TR-1042 risk 94→98, CREW-07 reassigned, TR-2108 enters top 5. Full pipeline updates in <1s" },
-  { step: 7, title: "AI Copilot", desc: "Ask: 'Why is TR-1042 critical?' → Grounded answer citing telemetry, weather, incidents, grid impact. No hallucination." },
+  { step: 1, title: "Command Center",    desc: "Open dashboard → TR-1042 ranked #1 critical (Risk 94/100, Health 38/100)", phase: "predict" },
+  { step: 2, title: "Asset Intelligence",desc: "Drill down → 8,420 customers at risk, 3 critical facilities, high temp + vibration + overheating incident + severe weather", phase: "predict" },
+  { step: 3, title: "Risk Breakdown",    desc: "See exact drivers: p24=0.72, impact=0.91, weather=0.84, criticality=0.95, redundancy=0.15 → composite 94", phase: "explain" },
+  { step: 4, title: "Maintenance Planner",desc: "TR-1042 Priority #1: Inspect within 6 h, replace bushing, thermal scan. Reason: temp anomaly + PD spike + storm exposure", phase: "prioritize" },
+  { step: 5, title: "Crew Planner",      desc: "CREW-07 (transformer specialist, Region 3) pre-positioned 2.3 km from asset. ETA 12 min. Backup: CREW-12", phase: "position" },
+  { step: 6, title: "Scenario Simulator",desc: "Run Severe Storm → TR-1042 risk 94→98, CREW-07 reassigned, TR-2108 enters top 5. Full pipeline updates in <1 s", phase: "position" },
+  { step: 7, title: "AI Copilot",        desc: "Ask: 'Why is TR-1042 critical?' → Grounded answer citing telemetry, weather, incidents, grid impact. No hallucination.", phase: "explain" },
 ]
 
+const phaseColor: Record<string, { color: string; bg: string }> = {
+  predict:   { color: "#2563eb", bg: "#2563eb" },
+  explain:   { color: "#7c3aed", bg: "#7c3aed" },
+  prioritize:{ color: "#d97706", bg: "#d97706" },
+  position:  { color: "#16a34a", bg: "#16a34a" },
+}
+
 const techStack = [
-  { icon: Zap, label: "FastAPI", desc: "Python backend" },
-  { icon: Cpu, label: "XGBoost/LSTM", desc: "Failure prediction" },
-  { icon: Globe, label: "Open-Meteo", desc: "Live weather" },
-  { icon: Bot, label: "Gemini", desc: "AI Copilot" },
-  { icon: Database, label: "SQLite", desc: "Asset data" },
-  { icon: Activity, label: "React 18", desc: "TypeScript UI" },
-  { icon: Shield, label: "Pydantic", desc: "Type-safe contracts" },
-  { icon: HardHat, label: "Docker", desc: "Containerized" },
+  { icon: Zap,       label: "FastAPI",         desc: "Python backend",      color: "#2563eb" },
+  { icon: Cpu,       label: "XGBoost",         desc: "Failure prediction",  color: "#7c3aed" },
+  { icon: Globe,     label: "Open-Meteo",      desc: "Live weather",        color: "#0891b2" },
+  { icon: Bot,       label: "Gemini",          desc: "AI Copilot",          color: "#16a34a" },
+  { icon: Database,  label: "SQLite / PG",     desc: "Asset data",          color: "#d97706" },
+  { icon: Activity,  label: "React 18",        desc: "TypeScript UI",       color: "#dc2626" },
+  { icon: Shield,    label: "Pydantic",        desc: "Type-safe contracts", color: "#7c3aed" },
+  { icon: HardHat,   label: "Docker",          desc: "Containerized",       color: "#374151" },
 ]
 
 const kpis = [
-  { value: "30", label: "Grid Assets Monitored" },
-  { value: "24h", label: "Failure Prediction Horizon" },
-  { value: "0–100", label: "Composite Risk Score" },
-  { value: "<1s", label: "Scenario Re-compute" },
-  { value: "100%", label: "Offline Demo Ready" },
-  { value: "0", label: "External Credentials Needed" },
+  { value: "30",    label: "Assets Monitored" },
+  { value: "24 h",  label: "Prediction Horizon" },
+  { value: "0–100", label: "Risk Score" },
+  { value: "<1 s",  label: "Scenario Re-compute" },
+  { value: "100%",  label: "Offline Ready" },
+  { value: "0",     label: "Credentials Needed" },
 ]
 
 export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
@@ -170,38 +184,40 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
 
   return (
     <div className="h-screen overflow-y-auto bg-[#f5f5f5] text-zinc-800 antialiased">
+
       {/* ── Nav ─────────────────────────────────────────────── */}
       <header
-        className={`sticky top-0 z-40 border-b border-[#d4d4d8] bg-[#f5f5f5]/80 backdrop-blur-xl transition-all duration-200 ${
+        className={`sticky top-0 z-40 border-b border-[#d4d4d8] bg-[#f5f5f5]/90 backdrop-blur-xl transition-all duration-200 ${
           scrollY > 20 ? "shadow-sm" : ""
         }`}
       >
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+          {/* Logo */}
           <a href="#top" className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
-              <ShieldAlert className="h-4 w-4" />
+              <Zap className="h-4 w-4" />
             </div>
             <div>
-              <div className="text-sm font-bold tracking-tight text-zinc-900">GridShield</div>
-              <div className="text-[10px] font-medium text-zinc-400">Power Outage Prediction & Grid Equipment Failure Advisor</div>
+              <div className="text-sm font-bold tracking-tight text-zinc-900">Bottleneck</div>
+              <div className="text-[10px] font-medium text-zinc-400 leading-tight">Power Outage Prediction</div>
             </div>
           </a>
 
           <nav className="hidden items-center gap-7 text-sm text-zinc-500 md:flex">
-            <a href="#problem" className="transition-colors hover:text-zinc-900" onClick={(e) => { e.preventDefault(); scrollTo("problem"); }}>Problem</a>
-            <a href="#solution" className="transition-colors hover:text-zinc-900" onClick={(e) => { e.preventDefault(); scrollTo("solution"); }}>Solution</a>
-            <a href="#differentiators" className="transition-colors hover:text-zinc-900" onClick={(e) => { e.preventDefault(); scrollTo("differentiators"); }}>Differentiators</a>
-            <a href="#demo" className="transition-colors hover:text-zinc-900" onClick={(e) => { e.preventDefault(); scrollTo("demo"); }}>Demo</a>
-            <a href="#tech" className="transition-colors hover:text-zinc-900" onClick={(e) => { e.preventDefault(); scrollTo("tech"); }}>Tech Stack</a>
+            {["Problem","Solution","Differentiators","Demo","Tech Stack"].map(label => (
+              <a
+                key={label}
+                href={`#${label.toLowerCase().replace(" ", "")}`}
+                className="transition-colors hover:text-zinc-900"
+                onClick={(e) => { e.preventDefault(); scrollTo(label.toLowerCase().replace(" ","")) }}
+              >{label}</a>
+            ))}
           </nav>
 
           <div className="hidden items-center gap-3 md:flex">
-            <Button variant="ghost" className="text-zinc-600 hover:bg-black/5 hover:text-zinc-900" onClick={() => openAuth("login")}>
-              Sign in
-            </Button>
+            <Button variant="ghost" className="text-zinc-600 hover:bg-black/5 hover:text-zinc-900" onClick={() => openAuth("login")}>Sign in</Button>
             <Button className="rounded-lg bg-blue-600 text-white shadow-sm shadow-blue-600/20 hover:bg-blue-700" onClick={() => openAuth("signup")}>
-              Get started
-              <ArrowRight className="h-4 w-4" />
+              Get started <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
 
@@ -209,14 +225,13 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
             {mobileNav ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
+
         {mobileNav && (
           <div className="border-t border-[#d4d4d8] bg-[#f5f5f5] px-6 py-4 md:hidden animate-fadeIn">
             <div className="flex flex-col gap-1 text-sm text-zinc-600">
-              <a href="#problem" onClick={() => scrollTo("problem")} className="rounded-lg px-3 py-2 hover:bg-black/5">Problem</a>
-              <a href="#solution" onClick={() => scrollTo("solution")} className="rounded-lg px-3 py-2 hover:bg-black/5">Solution</a>
-              <a href="#differentiators" onClick={() => scrollTo("differentiators")} className="rounded-lg px-3 py-2 hover:bg-black/5">Differentiators</a>
-              <a href="#demo" onClick={() => scrollTo("demo")} className="rounded-lg px-3 py-2 hover:bg-black/5">Demo Scenario</a>
-              <a href="#tech" onClick={() => scrollTo("tech")} className="rounded-lg px-3 py-2 hover:bg-black/5">Tech Stack</a>
+              {["problem","solution","differentiators","demo","techstack"].map(id => (
+                <a key={id} href={`#${id}`} onClick={() => scrollTo(id)} className="rounded-lg px-3 py-2 capitalize hover:bg-black/5">{id.replace("techstack","Tech Stack")}</a>
+              ))}
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <Button variant="outline" className="border-zinc-200 text-zinc-700" onClick={() => openAuth("login")}>Sign in</Button>
                 <Button className="bg-blue-600 text-white hover:bg-blue-700" onClick={() => openAuth("signup")}>Get started</Button>
@@ -228,57 +243,54 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
 
       {/* ── Hero ────────────────────────────────────────────── */}
       <section id="top" className="relative overflow-hidden">
-        <div className="absolute inset-0" aria-hidden="true">
-          <img
-            loading="lazy"
-            src="https://images.unsplash.com/photo-1497436072909-60f360e1d4b1?q=80&w=2400&auto=format&fit=crop"
-            alt=""
-            className="h-full w-full object-cover opacity-[0.12]"
-          />
-          <div className="absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_-10%,rgba(37,99,235,0.08),transparent)]" />
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,rgba(37,99,235,0.07),transparent)]" />
         </div>
 
-        <div className="relative z-10 mx-auto flex min-h-[88vh] max-w-6xl flex-col items-center justify-center px-6 py-24 text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-600/15 bg-white px-4 py-1.5 text-xs font-medium text-blue-700 shadow-sm animate-fadeIn">
+        <div className="relative z-10 mx-auto flex min-h-[86vh] max-w-6xl flex-col items-center justify-center px-6 py-24 text-center">
+          {/* Hackathon badge */}
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-600/20 bg-white px-4 py-1.5 text-xs font-semibold text-blue-700 shadow-sm animate-fadeIn">
             <Sparkles className="h-3.5 w-3.5" />
-            IBM Bob Hackathon 2026 · Track U1: Power Outage Prediction & Grid Equipment Failure Advisor
+            IBM Bob Hackathon 2026 · Track U1 · Team Bottleneck
           </div>
-          <h1 className="max-w-3xl text-balance text-4xl font-bold leading-[1.06] tracking-tight text-zinc-900 sm:text-6xl animate-fadeIn" style={{ animationDelay: "100ms" }}>
-            Predict failures before they happen.
-            <br />
-            <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-sky-400 bg-clip-text text-transparent">
+
+          <h1 className="max-w-3xl text-balance text-4xl font-bold leading-[1.08] tracking-tight text-zinc-900 sm:text-6xl animate-fadeIn" style={{ animationDelay: "80ms" }}>
+            Predict grid failures<br />before they happen.
+            <span className="block mt-2 bg-gradient-to-r from-blue-600 via-blue-500 to-sky-400 bg-clip-text text-transparent">
               Explain. Prioritize. Position.
             </span>
           </h1>
-          <p className="mt-6 max-w-xl text-pretty text-base leading-relaxed text-zinc-500 sm:text-lg animate-fadeIn" style={{ animationDelay: "200ms" }}>
-            GridShield turns asset telemetry, weather forecasts, and incident history into
+
+          <p className="mt-6 max-w-xl text-pretty text-base leading-relaxed text-zinc-500 sm:text-lg animate-fadeIn" style={{ animationDelay: "180ms" }}>
+            Bottleneck fuses asset telemetry, weather forecasts, and incident history into
             actionable intelligence — predicting which equipment will fail in the next 24–72 hours,
             explaining why, ranking by grid impact, and pre-positioning crews before outages occur.
           </p>
-          <div className="mt-9 flex flex-wrap items-center justify-center gap-3 animate-fadeIn" style={{ animationDelay: "300ms" }}>
+
+          <div className="mt-9 flex flex-wrap items-center justify-center gap-3 animate-fadeIn" style={{ animationDelay: "260ms" }}>
             <Button
               className="h-12 rounded-xl bg-blue-600 px-7 text-[15px] font-semibold text-white shadow-lg shadow-blue-600/25 hover:bg-blue-700"
               onClick={() => openAuth("signup")}
             >
-              Start exploring GridShield
-              <ArrowRight className="h-4 w-4" />
+              Start exploring <ArrowRight className="h-4 w-4" />
             </Button>
             <Button
               variant="outline"
-              className="h-12 rounded-xl border-zinc-200 bg-white px-7 text-[15px] text-zinc-700 shadow-sm hover:bg-white"
+              className="h-12 rounded-xl border-zinc-200 bg-white px-7 text-[15px] text-zinc-700 shadow-sm hover:bg-zinc-50"
               onClick={() => scrollTo("demo")}
             >
-              See the demo scenario
+              See the demo
             </Button>
           </div>
 
-          <div className="mt-16 grid w-full max-w-3xl grid-cols-2 gap-3 sm:grid-cols-3 sm:grid-cols-6 animate-fadeIn" style={{ animationDelay: "400ms" }}>
+          {/* KPI strip */}
+          <div className="mt-16 grid w-full max-w-3xl grid-cols-3 gap-3 sm:grid-cols-6 animate-fadeIn" style={{ animationDelay: "340ms" }}>
             {kpis.map((s) => (
-              <div key={s.label} className="glass-card-soft rounded-2xl px-5 py-4 text-center">
-                <div className="text-2xl font-bold tabular-nums text-zinc-900" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+              <div key={s.label} className="rounded-2xl border border-zinc-200 bg-white/80 px-4 py-4 text-center shadow-sm backdrop-blur-sm">
+                <div className="text-xl font-bold tabular-nums text-zinc-900" style={{ fontFamily: "ui-monospace, monospace" }}>
                   {s.value}
                 </div>
-                <div className="mt-1 text-[11px] font-medium uppercase tracking-wider text-zinc-400">{s.label}</div>
+                <div className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-400">{s.label}</div>
               </div>
             ))}
           </div>
@@ -287,64 +299,57 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
 
       {/* ── Problem ─────────────────────────────────────────── */}
       <section id="problem" className="mx-auto max-w-6xl px-6 py-24">
-        <div className="mb-14 max-w-2xl animate-fadeIn">
+        <div className="mb-12 max-w-2xl animate-fadeIn">
           <p className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-red-600">
             <AlertTriangle className="h-3.5 w-3.5" /> The Problem
           </p>
           <h2 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
-            Power grids are aging. Failures are discovered reactively.
+            Power grids are aging. Failures are found too late.
           </h2>
           <p className="mt-4 text-zinc-500 text-lg">
-            Utility operators manage fleets of transformers, feeders, breakers, and switching equipment
-            that are decades old, operating under increasing load, and exposed to more frequent extreme weather.
+            Utility operators manage fleets of transformers, feeders, and breakers that are decades old,
+            overloaded, and exposed to increasingly severe weather — with no unified view of risk.
           </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-4 animate-fadeIn" style={{ animationDelay: "100ms" }}>
+        <div className="grid gap-5 md:grid-cols-4 animate-fadeIn" style={{ animationDelay: "80ms" }}>
           {problemStats.map((s) => (
-            <div key={s.label} className="card relative overflow-hidden" style={{ borderLeft: "4px solid #c5221f" }}>
-              <div className="text-3xl font-bold tabular-nums text-zinc-900" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-                {s.value}
-              </div>
+            <div key={s.label} className="rounded-2xl border border-l-4 bg-white p-6 shadow-sm" style={{ borderLeftColor: "#c5221f", borderColor: "#e5e7eb" }}>
+              <div className="text-3xl font-bold tabular-nums text-zinc-900" style={{ fontFamily: "ui-monospace, monospace" }}>{s.value}</div>
               <div className="mt-2 text-sm text-zinc-500">{s.label}</div>
             </div>
           ))}
         </div>
 
-        <div className="mt-12 animate-fadeIn" style={{ animationDelay: "200ms" }}>
-          <h3 className="text-xl font-bold text-zinc-900 mb-6">Today's operational reality:</h3>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {[
-              { icon: Bell, title: "Reactive Discovery", desc: "Failures found after outage starts — not before" },
-              { icon: Radio, title: "Calendar-Driven Maintenance", desc: "Fixed schedules ignore actual asset condition" },
-              { icon: MapPin, title: "Post-Failure Dispatch", desc: "Crews sent after failure, not pre-positioned" },
-              { icon: Layers, title: "Siloed Risk Assessment", desc: "Weather, telemetry, incidents never combined in one view" },
-            ].map((item, i) => (
-              <div key={i} className="card flex gap-4 p-5">
-                <div className="flex-shrink-0 w-11 h-11 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
-                  <item.icon className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-zinc-900">{item.title}</h4>
-                  <p className="mt-1 text-sm text-zinc-500">{item.desc}</p>
-                </div>
+        <div className="mt-10 grid gap-4 sm:grid-cols-2 animate-fadeIn" style={{ animationDelay: "160ms" }}>
+          {[
+            { icon: Bell,      title: "Reactive Discovery",       desc: "Failures found after the outage starts — not before" },
+            { icon: Radio,     title: "Calendar-Driven Maintenance", desc: "Fixed schedules ignore actual asset condition and weather exposure" },
+            { icon: MapPin,    title: "Post-Failure Dispatch",    desc: "Crews sent after failure, never pre-positioned for at-risk zones" },
+            { icon: Layers,    title: "Siloed Risk Assessment",   desc: "Weather, telemetry, and incidents never combined in one view" },
+          ].map((item) => (
+            <div key={item.title} className="flex gap-4 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600">
+                <item.icon className="h-5 w-5" />
               </div>
-            ))}
-          </div>
+              <div>
+                <h4 className="font-semibold text-zinc-900">{item.title}</h4>
+                <p className="mt-1 text-sm text-zinc-500">{item.desc}</p>
+              </div>
+            </div>
+          ))}
         </div>
 
-        <div className="mt-12 p-6 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 animate-fadeIn" style={{ animationDelay: "300ms" }}>
-          <div className="flex items-start gap-4">
-            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
-              <AlertTriangle className="h-5 w-5" />
-            </div>
-            <div>
-              <h3 className="font-bold text-zinc-900">The result: unnecessary outages, delayed restoration, and significant customer impact</h3>
-              <p className="mt-2 text-sm text-zinc-600">
-                Especially for critical facilities — hospitals, emergency services, water treatment plants —
-                where every minute of downtime carries life-safety consequences.
-              </p>
-            </div>
+        <div className="mt-10 flex items-start gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-6 animate-fadeIn" style={{ animationDelay: "240ms" }}>
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+            <AlertTriangle className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="font-bold text-zinc-900">The result: unnecessary outages, delayed restoration, and life-safety risk</h3>
+            <p className="mt-1 text-sm text-zinc-600">
+              Especially for critical facilities — hospitals, emergency services, water treatment plants —
+              where every minute of downtime carries real consequences.
+            </p>
           </div>
         </div>
       </section>
@@ -354,62 +359,55 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
         <div className="mx-auto max-w-6xl px-6 py-24">
           <div className="mb-14 max-w-2xl animate-fadeIn">
             <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-blue-600">Solution</p>
-            <h2 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">PREDICT → EXPLAIN → PRIORITIZE → POSITION</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
+              PREDICT → EXPLAIN → PRIORITIZE → POSITION
+            </h2>
             <p className="mt-4 text-zinc-500 text-lg">
-              A complete decision-support loop: from raw data to crew dispatch, with explainability at every step.
+              A complete decision-support loop: from raw sensor data to crew dispatch,
+              with full explainability at every step.
             </p>
           </div>
 
-          <div className="relative">
-            {/* Connecting line */}
-            <div className="hidden lg:block absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-blue-600 via-yellow-500 to-green-600 -translate-x-1/2" style={{ transform: "translateX(-50%)" }} />
-
-            <div className="grid gap-8 lg:grid-cols-4 relative">
-              {workflowSteps.map((step, i) => (
-                <div
-                  key={step.title}
-                  className={`relative animate-fadeIn ${i >= 2 ? "lg:-mt-10" : ""}`}
-                  style={{ animationDelay: `${i * 150}ms` }}
-                >
-                  <div className="relative z-10 flex flex-col items-center">
-                    <div
-                      className="w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg"
-                      style={{ background: step.bg, color: step.color }}
-                    >
-                      <step.icon className="h-7 w-7" />
-                    </div>
-                    <div className="mt-4 text-center">
-                      <h3 className="text-lg font-bold text-zinc-900" style={{ color: step.color }}>
-                        {step.title}
-                      </h3>
-                      <p className="mt-2 text-sm text-zinc-500 max-w-xs">{step.desc}</p>
-                    </div>
-                    {i < workflowSteps.length - 1 && (
-                      <div className="hidden lg:block absolute top-[60px] left-[calc(50%+8px)] w-[calc(100%-16px)] h-px bg-gradient-to-r from-transparent via-zinc-200 to-transparent" />
-                    )}
+          {/* 4-step cards */}
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 animate-fadeIn" style={{ animationDelay: "80ms" }}>
+            {workflowSteps.map((step, i) => (
+              <div
+                key={step.title}
+                className="rounded-2xl border bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
+                style={{ borderColor: step.border, borderLeftWidth: 4, borderLeftColor: step.color }}
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <div
+                    className="flex h-12 w-12 items-center justify-center rounded-xl"
+                    style={{ background: step.bg, color: step.color }}
+                  >
+                    <step.icon className="h-6 w-6" />
                   </div>
+                  <span
+                    className="text-xs font-bold tabular-nums"
+                    style={{ color: step.color, fontFamily: "ui-monospace, monospace" }}
+                  >
+                    {step.step}
+                  </span>
                 </div>
-              ))}
-            </div>
+                <h3 className="text-base font-bold" style={{ color: step.color }}>{step.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-zinc-500">{step.desc}</p>
+              </div>
+            ))}
           </div>
 
-          {/* Mobile workflow cards */}
-          <div className="mt-12 lg:hidden grid gap-4 animate-fadeIn">
+          {/* Flow connector */}
+          <div className="mt-10 flex items-center justify-center gap-0 overflow-x-auto animate-fadeIn" style={{ animationDelay: "200ms" }}>
             {workflowSteps.map((step, i) => (
-              <div key={step.title} className="card flex gap-4 p-5" style={{ borderLeft: `4px solid ${step.color}` }}>
-                <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: step.bg }}>
-                  <step.icon className="h-6 w-6" style={{ color: step.color }} />
+              <React.Fragment key={step.title}>
+                <div className="flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-bold whitespace-nowrap shadow-sm"
+                  style={{ borderColor: step.border, background: step.bg, color: step.color }}>
+                  <step.icon className="h-3.5 w-3.5" />{step.title}
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold tracking-widest" style={{ color: step.color, fontFamily: "'JetBrains Mono', monospace" }}>
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <h4 className="font-semibold text-zinc-900">{step.title}</h4>
-                  </div>
-                  <p className="mt-2 text-sm text-zinc-500">{step.desc}</p>
-                </div>
-              </div>
+                {i < workflowSteps.length - 1 && (
+                  <ArrowRight className="h-4 w-4 shrink-0 text-zinc-300 mx-1" />
+                )}
+              </React.Fragment>
             ))}
           </div>
         </div>
@@ -419,28 +417,31 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
       <section id="differentiators" className="mx-auto max-w-6xl px-6 py-24">
         <div className="mb-14 max-w-2xl animate-fadeIn">
           <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-purple-600">Key Differentiators</p>
-          <h2 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">Why GridShield is different</h2>
-          <p className="mt-4 text-zinc-500">Four architectural choices that make GridShield operational, not academic.</p>
+          <h2 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">Why Bottleneck is different</h2>
+          <p className="mt-4 text-zinc-500">Four architectural choices that make this operational, not academic.</p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-2 animate-fadeIn">
-          {differentiators.map((d, i) => (
+        <div className="grid gap-6 lg:grid-cols-2 animate-fadeIn" style={{ animationDelay: "80ms" }}>
+          {differentiators.map((d) => (
             <div
               key={d.title}
-              className="card p-6 group relative overflow-hidden transition-all hover:shadow-[0_12px_40px_rgba(0,0,0,0.08)]"
-              style={{ animationDelay: `${i * 100}ms` }}
+              className="group relative overflow-hidden rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
             >
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: `linear-gradient(135deg, ${d.color}10, transparent)` }} />
-              <div className="relative flex gap-4">
-                <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: `${d.color}15`, color: d.color }}>
+              <div className="flex gap-4">
+                <div
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl"
+                  style={{ background: `${d.color}15`, color: d.color }}
+                >
                   <d.icon className="h-6 w-6" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="text-[15px] font-semibold text-zinc-900">{d.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-zinc-500">{d.desc}</p>
-                  <div className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
-                    <Sparkles className="h-3 w-3" />
-                    <span>{d.highlight}</span>
+                  <div
+                    className="mt-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium"
+                    style={{ background: `${d.color}12`, color: d.color }}
+                  >
+                    <Sparkles className="h-3 w-3" />{d.highlight}
                   </div>
                 </div>
               </div>
@@ -454,99 +455,105 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
         <div className="mx-auto max-w-6xl px-6 py-24">
           <div className="mb-14 max-w-2xl animate-fadeIn">
             <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-green-600">Demo Scenario</p>
-            <h2 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">The story we demonstrate end-to-end</h2>
+            <h2 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">
+              The story we demonstrate end-to-end
+            </h2>
             <p className="mt-4 text-zinc-500">
-              A weather event approaches while transformer TR-1042 develops abnormal temperature, vibration,
-              partial discharge, and load behavior. Watch the full loop execute.
+              A storm approaches while transformer TR-1042 develops abnormal temperature, vibration,
+              and partial discharge. Watch the full PREDICT → POSITION loop execute.
             </p>
           </div>
 
-          <div className="relative">
-            <div className="hidden lg:block absolute left-10 top-0 bottom-0 w-px bg-gradient-to-b from-blue-600 via-amber-500 to-green-600" />
-            <div className="grid gap-6 lg:grid-cols-2">
-              {demoScenario.map((item, i) => (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-fadeIn" style={{ animationDelay: "80ms" }}>
+            {demoScenario.map((item) => {
+              const pc = phaseColor[item.phase]
+              return (
                 <div
                   key={item.step}
-                  className={`relative animate-fadeIn ${i >= 3 ? "lg:-mt-6" : ""}`}
-                  style={{ animationDelay: `${i * 80}ms` }}
+                  className="relative rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+                  style={{ borderTopWidth: 3, borderTopColor: pc.bg }}
                 >
-                  <div className="relative pl-10 lg:pl-0">
-                    <div className="absolute left-0 top-1 lg:left-[calc(50%+8px)] lg:-translate-x-full w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs z-10 shadow"
-                      style={{ background: i < 2 ? "#2563eb" : i < 4 ? "#eab308" : "#16a34a" }}>
+                  <div className="mb-3 flex items-center justify-between">
+                    <div
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white shadow-sm"
+                      style={{ background: pc.bg }}
+                    >
                       {item.step}
                     </div>
-                    <div className="card p-5 group hover:shadow-[0_8px_30px_rgba(0,0,0,0.1)] transition-shadow">
-                      <h4 className="font-semibold text-zinc-900 flex items-center gap-2">
-                        <span className="text-xs font-mono text-zinc-400">{item.title}</span>
-                      </h4>
-                      <p className="mt-2 text-sm text-zinc-500">{item.desc}</p>
-                    </div>
+                    <span
+                      className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+                      style={{ background: `${pc.bg}18`, color: pc.bg }}
+                    >
+                      {item.phase}
+                    </span>
                   </div>
+                  <h4 className="font-semibold text-zinc-900 text-sm">{item.title}</h4>
+                  <p className="mt-1.5 text-xs leading-relaxed text-zinc-500">{item.desc}</p>
                 </div>
-              ))}
-            </div>
+              )
+            })}
           </div>
 
-          <div className="mt-12 p-6 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-blue-900 text-white animate-fadeIn">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
-                <CheckCircle2 className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="font-bold text-lg">No external credentials required</h3>
-                <p className="mt-1 text-blue-100 text-sm">
-                  The full demo runs offline with deterministic synthetic data. 30 assets, seeded predictions,
-                  live weather fallback, and rule-based AI copilot — all reproducible, zero setup.
-                </p>
-              </div>
+          <div className="mt-10 flex items-start gap-4 rounded-2xl bg-gradient-to-r from-blue-600 via-blue-700 to-blue-900 p-6 text-white animate-fadeIn" style={{ animationDelay: "200ms" }}>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/20">
+              <CheckCircle2 className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-lg">No external credentials required</h3>
+              <p className="mt-1 text-blue-100 text-sm">
+                The full demo runs offline with deterministic synthetic data. 30 assets, seeded predictions,
+                live weather fallback, and rule-based AI copilot — all reproducible, zero setup.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* ── Tech Stack ────────────────────────────────────── */}
-      <section id="tech" className="mx-auto max-w-6xl px-6 py-24">
+      <section id="techstack" className="mx-auto max-w-6xl px-6 py-24">
         <div className="mb-14 max-w-2xl animate-fadeIn">
           <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-zinc-500">Technology</p>
           <h2 className="text-3xl font-bold tracking-tight text-zinc-900 sm:text-4xl">Built on solid foundations</h2>
-          <p className="mt-4 text-zinc-500">Leveraging proven infrastructure from Gridkavach with GridShield-specific additions.</p>
+          <p className="mt-4 text-zinc-500">Production-grade stack with graceful fallbacks — runs fully offline, no keys required.</p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 animate-fadeIn">
-          {techStack.map((t, i) => (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 animate-fadeIn" style={{ animationDelay: "60ms" }}>
+          {techStack.map((t) => (
             <div
               key={t.label}
-              className="card p-5 text-center group hover:shadow-[0_8px_30px_rgba(0,0,0,0.1)] transition-all hover:-translate-y-0.5"
-              style={{ animationDelay: `${i * 50}ms` }}
+              className="rounded-2xl border border-zinc-200 bg-white p-5 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
             >
-              <div className="w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center bg-blue-50 text-blue-600">
+              <div
+                className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl"
+                style={{ background: `${t.color}12`, color: t.color }}
+              >
                 <t.icon className="h-6 w-6" />
               </div>
-              <h4 className="font-semibold text-zinc-900">{t.label}</h4>
+              <h4 className="font-semibold text-zinc-900 text-sm">{t.label}</h4>
               <p className="mt-1 text-xs text-zinc-500">{t.desc}</p>
             </div>
           ))}
         </div>
 
-        <div className="mt-12 animate-fadeIn">
-          <h3 className="text-xl font-bold text-zinc-900 mb-6 text-center">Architecture at a glance</h3>
-          <div className="card p-6 overflow-x-auto">
-            <pre className="text-sm font-mono text-zinc-700 leading-relaxed" style={{ fontFamily: "'JetBrains Mono', monospace", whiteSpace: "pre-wrap" }}>
-{`Asset Telemetry (temp, vibration, load, voltage, PD)
-      +  Incident History
-      +  Weather Exposure (Open-Meteo live / mock fallback)
-            ↓
-    MockFailurePredictor  ←── ML seam (swap → RealFailurePredictor)
-            ↓
-     FailurePrediction (stable Pydantic contract)
-            ↓
-   Grid Impact Engine  +  Risk Engine
-            ↓
-       Risk Ranking (composite score 0–100)
-            ↓
-    Maintenance Prioritization   +   Crew Pre-Positioning
-            ↓
-   GridShield Command Center (React 18 + TypeScript)`}
+        {/* Architecture block */}
+        <div className="mt-12 animate-fadeIn" style={{ animationDelay: "160ms" }}>
+          <h3 className="mb-5 text-center text-xl font-bold text-zinc-900">Architecture at a glance</h3>
+          <div className="rounded-2xl border border-zinc-200 bg-zinc-950 p-6 overflow-x-auto shadow-sm">
+            <pre className="text-sm leading-relaxed text-zinc-300" style={{ fontFamily: "ui-monospace, monospace", whiteSpace: "pre" }}>
+{`  Asset Telemetry  +  Incident History  +  Weather (Open-Meteo / mock)
+                           ↓
+         ┌─────────────────────────────────────┐
+         │   XGBoostPredictor  (or Mock)        │  ← swap in one file
+         │   FailurePrediction contract         │  ← stable boundary
+         └─────────────────────────────────────┘
+                           ↓
+          Grid Impact Engine  +  Risk Engine
+                           ↓
+              Risk Ranking  (composite 0–100)
+                     ↙              ↘
+    Maintenance Planner       Crew Pre-Positioning
+                     ↘              ↙
+               Bottleneck Command Center  (React 18 + TypeScript)`}
             </pre>
           </div>
         </div>
@@ -555,22 +562,21 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
       {/* ── CTA ─────────────────────────────────────────────── */}
       <section className="mx-auto max-w-6xl px-6 py-24 animate-fadeIn">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900 px-8 py-16 text-center shadow-xl shadow-blue-600/20">
-          <div className="absolute inset-0 bg-[radial-gradient(60%_80%_at_50%_0%,rgba(255,255,255,0.18),transparent)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(60%_80%_at_50%_0%,rgba(255,255,255,0.15),transparent)]" />
           <div className="relative z-10 max-w-2xl mx-auto">
             <h2 className="mx-auto max-w-xl text-balance text-3xl font-bold tracking-tight text-white sm:text-4xl">
               Your first risk ranking in under five minutes.
             </h2>
-            <p className="mx-auto mt-4 max-w-md text-blue-100">
-              Create an account, explore the Command Center, and trace TR-1042 through the full
-              PREDICT → EXPLAIN → PRIORITIZE → POSITION loop.
+            <p className="mx-auto mt-4 max-w-md text-blue-100 text-[15px]">
+              Create an account, explore the Command Center, and trace TR-1042 through
+              the full PREDICT → EXPLAIN → PRIORITIZE → POSITION loop.
             </p>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Button
                 className="h-12 rounded-xl bg-white px-8 text-[15px] font-semibold text-blue-700 shadow-lg hover:bg-blue-50"
                 onClick={() => openAuth("signup")}
               >
-                Start free
-                <ArrowRight className="h-4 w-4" />
+                Start for free <ArrowRight className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
@@ -580,37 +586,44 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                 View demo walkthrough
               </Button>
             </div>
-            <p className="mt-6 text-xs text-blue-200/60">
-              For demo access, use the pre-seeded account
+            <p className="mt-5 text-xs text-blue-200/60">
+              Demo login: demo@gridshield.ai / demo1234
             </p>
           </div>
         </div>
       </section>
 
       {/* ── Footer ──────────────────────────────────────────── */}
-      <footer className="border-t border-[#d4d4d8] animate-fadeIn">
+      <footer className="border-t border-[#d4d4d8]">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 text-sm text-zinc-400 sm:flex-row">
           <div className="flex items-center gap-2">
-            <ShieldAlert className="h-4 w-4 text-blue-600" />
-            <span className="font-medium text-zinc-600">GridShield AI</span>
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-600 text-white">
+              <Zap className="h-3.5 w-3.5" />
+            </div>
+            <span className="font-semibold text-zinc-700">Bottleneck</span>
+            <span className="text-zinc-300">·</span>
+            <span className="text-xs text-zinc-400">IBM Bob Hackathon 2026 · Track U1</span>
           </div>
-          <div className="flex items-center gap-6">
-            <a href="#problem" className="hover:text-zinc-800">Problem</a>
-            <a href="#solution" className="hover:text-zinc-800">Solution</a>
-            <a href="#differentiators" className="hover:text-zinc-800">Differentiators</a>
-            <a href="#demo" className="hover:text-zinc-800">Demo</a>
-            <a href="#tech" className="hover:text-zinc-800">Tech Stack</a>
+          <div className="flex items-center gap-6 text-xs">
+            {["problem","solution","differentiators","demo","techstack"].map(id => (
+              <a key={id} href={`#${id}`} className="capitalize hover:text-zinc-800"
+                onClick={e => { e.preventDefault(); scrollTo(id) }}>
+                {id === "techstack" ? "Tech Stack" : id}
+              </a>
+            ))}
           </div>
-          <div className="text-xs">IBM Bob Hackathon 2026 · Track U1 · PREDICT → EXPLAIN → PRIORITIZE → POSITION</div>
+          <div className="text-xs text-zinc-400">PREDICT → EXPLAIN → PRIORITIZE → POSITION</div>
         </div>
       </footer>
 
       {/* ── Auth modal ──────────────────────────────────────── */}
       {authOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm animate-fadeIn" onClick={() => setAuthOpen(false)}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4 backdrop-blur-sm animate-fadeIn"
+          onClick={() => setAuthOpen(false)}
+        >
           <div
-            className="animate-fadeIn w-full max-w-md rounded-3xl border bg-white p-8 shadow-2xl"
-            style={{ borderColor: "#d4d4d8" }}
+            className="animate-fadeIn w-full max-w-md rounded-3xl border border-zinc-200 bg-white p-8 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="mb-7 flex items-start justify-between">
@@ -619,19 +632,27 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                   {authMode === "login" ? "Welcome back" : "Create your account"}
                 </h3>
                 <p className="mt-1 text-sm text-zinc-400">
-                  {authMode === "login" ? "Sign in to your GridShield workspace." : "Start predicting outages in minutes — no card needed."}
+                  {authMode === "login"
+                    ? "Sign in to your Bottleneck workspace."
+                    : "Start predicting outages in minutes — no card needed."}
                 </p>
               </div>
-              <button onClick={() => setAuthOpen(false)} className="rounded-lg p-1.5 text-zinc-400 hover:bg-black/5 hover:text-zinc-800" aria-label="Close">
+              <button
+                onClick={() => setAuthOpen(false)}
+                className="rounded-lg p-1.5 text-zinc-400 hover:bg-black/5 hover:text-zinc-800"
+                aria-label="Close"
+              >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {authMode === "login" && (
               <div className="mb-5 rounded-xl border border-blue-600/15 bg-blue-50 px-4 py-3 text-xs text-blue-700">
-                <div className="mb-2 font-medium">Quick Demo Access</div>
+                <div className="mb-2 font-semibold">Quick Demo Access</div>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="font-mono text-blue-600/70" style={{ fontFamily: "'JetBrains Mono', monospace" }}>Pre-seeded demo account</span>
+                  <span className="font-mono text-blue-600/80" style={{ fontFamily: "ui-monospace, monospace" }}>
+                    demo@gridshield.ai / demo1234
+                  </span>
                   <button
                     type="button"
                     className="shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm hover:bg-blue-700"
@@ -663,15 +684,8 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
 
 /* ── Auth form ──────────────────────────────────────────────── */
 function AuthForm({
-  mode,
-  onClose,
-  onSwitch,
-  onLogin,
-  onSignup,
-  inputCls,
-  inputEl,
-  defaultEmail,
-  defaultPassword,
+  mode, onClose, onSwitch, onLogin, onSignup,
+  inputCls, inputEl, defaultEmail, defaultPassword,
 }: {
   mode: "login" | "signup"
   onClose: () => void
@@ -683,56 +697,54 @@ function AuthForm({
   defaultEmail?: string
   defaultPassword?: string
 }) {
-  const [name, setName] = React.useState("")
-  const [email, setEmail] = React.useState(defaultEmail || "")
+  const [name, setName]         = React.useState("")
+  const [email, setEmail]       = React.useState(defaultEmail || "")
   const [password, setPassword] = React.useState(defaultPassword || "")
-  const [error, setError] = React.useState("")
-  const [loading, setLoading] = React.useState(false)
+  const [error, setError]       = React.useState("")
+  const [loading, setLoading]   = React.useState(false)
 
   React.useEffect(() => {
-    if (defaultEmail) setEmail(defaultEmail)
+    if (defaultEmail)    setEmail(defaultEmail)
     if (defaultPassword) setPassword(defaultPassword)
   }, [defaultEmail, defaultPassword])
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
-    if (mode === "signup" && !name.trim()) { setError("Full name is required"); return }
-    if (!email.trim()) { setError("Email is required"); return }
-    if (!password) { setError("Password is required"); return }
-    if (mode === "signup" && password.length < 8) { setError("Password must be at least 8 characters"); return }
+    if (mode === "signup" && !name.trim())            { setError("Full name is required"); return }
+    if (!email.trim())                                { setError("Email is required"); return }
+    if (!password)                                    { setError("Password is required"); return }
+    if (mode === "signup" && password.length < 8)     { setError("Password must be at least 8 characters"); return }
     setLoading(true)
     try {
       if (mode === "signup") await onSignup(email.trim(), password, name.trim())
-      else await onLogin(email.trim(), password)
+      else                   await onLogin(email.trim(), password)
     } catch (err: any) {
       const detail = err?.response?.data?.detail
       let msg = "Authentication failed"
-      if (typeof detail === "string") msg = detail
-      else if (Array.isArray(detail)) msg = detail.map((e: any) => e.msg || String(e)).join(", ")
-      else if (detail?.message) msg = detail.message
+      if (typeof detail === "string")  msg = detail
+      else if (Array.isArray(detail))  msg = detail.map((e: any) => e.msg || String(e)).join(", ")
+      else if (detail?.message)        msg = detail.message
       setError(msg)
       setLoading(false)
     }
   }
 
-  const switchMode = (m: "login" | "signup") => {
-    setError("")
-    onSwitch(m)
-  }
+  const switchMode = (m: "login" | "signup") => { setError(""); onSwitch(m) }
 
   return (
     <>
       {error && (
-        <div className="mb-5 rounded-xl border border-red-600/20 bg-red-50 px-4 py-3 text-sm text-red-600 animate-fadeIn">{String(error)}</div>
+        <div className="mb-5 rounded-xl border border-red-600/20 bg-red-50 px-4 py-3 text-sm text-red-600 animate-fadeIn">
+          {String(error)}
+        </div>
       )}
-
       <form onSubmit={submit} className="space-y-4">
         {mode === "signup" && (
           <div>
             <label className="mb-1.5 block text-xs font-medium text-zinc-500">Full name</label>
             <div className={inputCls}>
-              <Bot className="h-4 w-4 text-zinc-400" />
+              <ShieldAlert className="h-4 w-4 text-zinc-400" />
               <input className={inputEl} placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} required />
             </div>
           </div>
@@ -760,21 +772,14 @@ function AuthForm({
           {loading ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}
         </Button>
       </form>
-
       <div className="mt-6 text-center text-sm text-zinc-500">
         {mode === "login" ? (
-          <>
-            Don&apos;t have an account?{" "}
-            <button className="font-medium text-blue-600 hover:underline" onClick={() => switchMode("signup")}>
-              Sign up
-            </button>
+          <>Don&apos;t have an account?{" "}
+            <button className="font-medium text-blue-600 hover:underline" onClick={() => switchMode("signup")}>Sign up</button>
           </>
         ) : (
-          <>
-            Already registered?{" "}
-            <button className="font-medium text-blue-600 hover:underline" onClick={() => switchMode("login")}>
-              Sign in
-            </button>
+          <>Already registered?{" "}
+            <button className="font-medium text-blue-600 hover:underline" onClick={() => switchMode("login")}>Sign in</button>
           </>
         )}
       </div>

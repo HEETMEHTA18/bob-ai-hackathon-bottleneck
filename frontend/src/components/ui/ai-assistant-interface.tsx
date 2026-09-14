@@ -94,8 +94,8 @@ function WelcomeScreen({ onSend }: { onSend: (msg: string) => void }) {
         <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#1a73e8] text-white shadow-lg shadow-[#1a73e8]/25">
           <Zap className="h-6 w-6" />
         </div>
-        <h1 className="text-[28px] font-bold text-[#202124]">GridShield AI Advisor</h1>
-        <p className="mt-1 text-[15px] text-[#5f6368]">Grounded Grid Operations Intelligence</p>
+        <h1 className="text-[28px] font-bold text-[#202124]">Bottleneck AI Advisor</h1>
+        <p className="mt-1 text-[15px] text-[#5f6368]">Power Outage Prediction Intelligence</p>
       </motion.div>
       <div className="grid w-full max-w-lg grid-cols-2 gap-3">
         {suggestions.map((s) => (
@@ -126,7 +126,7 @@ function getSmartResponse(query: string): string {
   if (has("weather", "temperature", "wind", "ghi", "cloud"))
     return "Live weather requires backend connection.";
   if (has("hello", "hey", "help"))
-    return "Hi! I'm your GridShield advisor. I can help with generation forecasts, curtailment risk, battery dispatch, weather analysis, and model accuracy. What would you like to explore?";
+    return "Hi! I'm your Bottleneck advisor. I can help with grid failure prediction, risk ranking, crew positioning, and maintenance planning. What would you like to explore?";
   return `I can help with forecasts, risk, battery, weather, or model accuracy. Could you rephrase your question?`;
 }
 
@@ -281,7 +281,7 @@ export function AIAssistantInterface({ embed = false }: { embed?: boolean }) {
             </button>
           </div>
           <p className="mt-2 text-center text-[11px] text-[#9aa0a6]">
-            GridShield AI · Grid operations intelligence · Data from Open-Meteo
+            Bottleneck AI · Power outage prediction · Data from Open-Meteo
           </p>
         </div>
       </div>

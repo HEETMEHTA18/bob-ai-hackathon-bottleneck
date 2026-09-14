@@ -46,7 +46,7 @@ export default function CommandCenter({ onSelectAsset }: CommandCenterProps) {
   )
   if (error) return (
     <div className="card" style={{ borderLeft: `4px solid ${RED}` }}>
-      <div className="card-title" style={{ color: RED }}>Failed to load GridShield data</div>
+      <div className="card-title" style={{ color: RED }}>Failed to load Bottleneck data</div>
       <p className="text-sm text-muted">{error}</p>
       <button className="btn btn-primary btn-sm" style={{ marginTop: 12 }} onClick={load}>Retry</button>
     </div>
@@ -57,7 +57,7 @@ export default function CommandCenter({ onSelectAsset }: CommandCenterProps) {
       {/* Header */}
       <div className="page-header flex-between">
         <div>
-          <div className="page-title">GridShield Command Center</div>
+          <div className="page-title">Bottleneck Command Center</div>
           <div className="page-subtitle">
             Power Outage Prediction &amp; Grid Equipment Failure Advisor
             {kpis && <span style={{ marginLeft: 12, fontSize: 13, color: MUTED }}>
