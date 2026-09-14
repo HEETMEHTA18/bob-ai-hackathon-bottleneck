@@ -1,4 +1,4 @@
-# Bottleneck AI — Agent Instructions
+# GridShield AI — Agent Instructions
 
 ## Mission
 Build a working IBM Bob Hackathon proof of concept for U1 Power Outage Prediction & Grid Equipment Failure Advisor.

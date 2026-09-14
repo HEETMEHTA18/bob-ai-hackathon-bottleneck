@@ -58,7 +58,7 @@ export function Layout({ children, currentPage, onNavigate }: LayoutProps) {
           </div>
           {!sidebarCollapsed && (
             <div className="animate-fadeIn">
-              <h1 className="text-[15px] font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Bottleneck</h1>
+              <h1 className="text-[15px] font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>GridMind</h1>
               <p className="text-[10px] font-medium" style={{ color: 'var(--text-muted)' }}>AI Energy Platform</p>
             </div>
           )}

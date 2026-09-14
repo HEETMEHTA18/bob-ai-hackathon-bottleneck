@@ -1,12 +1,12 @@
-# Solution Overview — Bottleneck AI
+# Solution Overview — GridShield AI
 
 ## IBM Bob Hackathon 2026 — Track U1
 
 ---
 
-## What Bottleneck Does
+## What GridShield Does
 
-Bottleneck is a software-first AI-powered grid reliability platform.
+GridShield is a software-first AI-powered grid reliability platform.
 
 It takes **three inputs**:
 - Asset telemetry (transformer temperature, vibration, load, voltage, partial discharge)
@@ -29,7 +29,7 @@ Core product story: **PREDICT → EXPLAIN → PRIORITIZE → POSITION**
 
 Most failure prediction systems rank by probability alone.
 
-Bottleneck computes a **composite risk score**:
+GridShield computes a **composite risk score**:
 
 ```
 Risk = f(failure_probability × grid_impact × weather_exposure × criticality × (1 − redundancy))
@@ -91,7 +91,7 @@ Asset Telemetry (synthetic / future IoT)
             ↓
    Maintenance Prioritization   +   Crew Pre-Positioning
             ↓
-  Bottleneck Command Center (React / TypeScript frontend)
+  GridShield Command Center (React / TypeScript frontend)
 ```
 
 ---
@@ -111,18 +111,18 @@ Asset Telemetry (synthetic / future IoT)
 
 ## Technical Foundation
 
-Built on **Bottleneck** (Bottleneck renewable-energy forecasting platform):
+Built on **Gridkavach** (Gridkavach renewable-energy forecasting platform):
 
 | Component | Reuse Status |
 |-----------|-------------|
 | FastAPI app structure, middleware, CORS | ✅ Kept |
 | Open-Meteo weather provider | ✅ Adapted → asset exposure scores |
 | Gemini copilot infrastructure | ✅ Adapted → Grid Operations Advisor |
-| React 18 + TypeScript + Vite frontend | ✅ Adapted — Bottleneck pages added |
+| React 18 + TypeScript + Vite frontend | ✅ Adapted — GridShield pages added |
 | Auth system, Docker, deployment configs | ✅ Kept |
 | Solar/wind forecasting | ⚠️ Preserved, not primary UX |
 
-All new Bottleneck functionality lives under `backend/bottleneck/` and `frontend/src/components/bottleneck/`.
+All new GridShield functionality lives under `backend/gridshield/` and `frontend/src/components/gridshield/`.
 
 ---
 

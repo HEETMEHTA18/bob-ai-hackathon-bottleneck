@@ -1,7 +1,7 @@
-# Bottleneck AI — Project Context
+# GridShield AI — Project Context
 
 ## Mission
-Bottleneck AI is a software-first AI-powered grid reliability platform for the IBM Bob Hackathon U1 problem:
+GridShield AI is a software-first AI-powered grid reliability platform for the IBM Bob Hackathon U1 problem:
 **Power Outage Prediction & Grid Equipment Failure Advisor**.
 
 The official challenge requires a solution that combines asset-health sensor data, weather forecasts, and historical incident records to:
