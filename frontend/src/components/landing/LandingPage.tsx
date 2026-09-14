@@ -98,8 +98,8 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
               <Zap className="h-4 w-4" />
             </div>
             <div>
-              <div className="text-sm font-bold tracking-tight text-zinc-900">GridMind AI</div>
-              <div className="text-[10px] font-medium text-zinc-400">Renewable Energy Intelligence</div>
+              <div className="text-sm font-bold tracking-tight text-zinc-900">GridShield</div>
+              <div className="text-[10px] font-medium text-zinc-400">Grid Operations Intelligence</div>
             </div>
           </a>
 
@@ -160,7 +160,7 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
             </span>
           </h1>
           <p className="mt-6 max-w-xl text-pretty text-base leading-relaxed text-zinc-500 sm:text-lg">
-            GridMind turns raw irradiance and wind into P10/P50/P90 forecasts,
+            GridShield turns raw irradiance and wind into P10/P50/P90 forecasts,
             flags curtailment before it costs you money, and tells you exactly
             when to charge, discharge, or sell back to the grid.
           </p>
@@ -308,7 +308,7 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 text-sm text-zinc-400 sm:flex-row">
           <div className="flex items-center gap-2">
             <Zap className="h-4 w-4 text-blue-600" />
-            <span className="font-medium text-zinc-600">GridMind AI</span>
+            <span className="font-medium text-zinc-600">GridShield</span>
           </div>
           <div className="flex items-center gap-6">
             <a href="#features" className="hover:text-zinc-800">Features</a>
@@ -332,7 +332,7 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
                   {authMode === "login" ? "Welcome back" : "Create your account"}
                 </h3>
                 <p className="mt-1 text-sm text-zinc-400">
-                  {authMode === "login" ? "Sign in to your GridMind workspace." : "Start forecasting in minutes — no card needed."}
+                  {authMode === "login" ? "Sign in to your GridShield workspace." : "Start forecasting in minutes — no card needed."}
                 </p>
               </div>
               <button onClick={() => setAuthOpen(false)} className="rounded-lg p-1.5 text-zinc-400 hover:bg-black/5 hover:text-zinc-800" aria-label="Close">
