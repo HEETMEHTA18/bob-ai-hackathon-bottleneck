@@ -1,34 +1,38 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import {
-  GSCommandCenter, GSAssetIntelligence, GSMaintenance, GSCrewPlanner, GSScenarioSim, GSCopilot
+  GSCommandCenter, GSAssetIntelligence, GSMaintenance, GSCrewPlanner,
+  GSScenarioSim, GSCopilot, GSSettings,
 } from './components/gridshield'
+import { signup, login, getMe, User } from './api/client'
 import {
-  signup, login, getMe, User
-} from './api/client'
-import {
+  AlertTriangle,
   Bot,
-  Compass,
+  ChevronRight,
   LayoutDashboard,
-  Loader2,
-  Power,
-  Rocket,
-  ShieldAlert,
-  Shuffle,
-  Sparkles,
+  LogOut,
+  Cpu,
+  Users,
+  Zap,
+  FlaskConical,
+  Activity,
+  Settings,
 } from 'lucide-react'
 import { LandingPage } from '@/components/landing/LandingPage'
 
-// ─── Nav definition ───────────────────────────────────────────────────────────
-const navItems: { id: string; label: string; icon: any }[] = [
-  { id: 'gs_dashboard',    label: 'Command Center',  icon: ShieldAlert },
-  { id: 'gs_asset',        label: 'Asset Intelligence', icon: LayoutDashboard },
-  { id: 'gs_maintenance',  label: 'Maintenance',     icon: Rocket },
-  { id: 'gs_crew',         label: 'Crew Planner',    icon: Compass },
-  { id: 'gs_scenarios',    label: 'Scenarios',       icon: Shuffle },
-  { id: 'gs_copilot',      label: 'AI Advisor',      icon: Bot },
+// ─── Nav definition ────────────────────────────────────────────────────────────
+interface NavItem { id: string; label: string; icon: React.ElementType; badge?: string }
+
+const navItems: NavItem[] = [
+  { id: 'gs_dashboard',   label: 'Command Center',     icon: LayoutDashboard },
+  { id: 'gs_asset',       label: 'Asset Intelligence', icon: Activity },
+  { id: 'gs_maintenance', label: 'Maintenance',        icon: AlertTriangle },
+  { id: 'gs_crew',        label: 'Crew Planner',       icon: Users },
+  { id: 'gs_scenarios',   label: 'Scenarios',          icon: FlaskConical },
+  { id: 'gs_copilot',     label: 'AI Advisor',         icon: Bot },
+  { id: 'gs_settings',    label: 'Settings',           icon: Settings },
 ]
 
-// ─── Auth Context ─────────────────────────────────────────────
+// ─── Auth hook ────────────────────────────────────────────────
 function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(localStorage.getItem('access_token'))
@@ -70,36 +74,79 @@ function useAuth() {
 }
 
 // ─── Sidebar ──────────────────────────────────────────────────
-function Sidebar({ page, onNav, onLogout, user }: { page: string; onNav: (p: string) => void; onLogout: () => void; user: User }) {
+function Sidebar({
+  page,
+  onNav,
+  onLogout,
+  user,
+}: {
+  page: string
+  onNav: (p: string) => void
+  onLogout: () => void
+  user: User
+}) {
+  const initials = (user.full_name || user.email)
+    .split(' ')
+    .map((w: string) => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+
   return (
-    <aside className="sidebar">
-      <div className="sidebar-logo">
-        <div className="sidebar-logo-icon"><ShieldAlert size={18} /></div>
-        <div>
-          <h1>GridShield</h1>
-          <p>Grid Ops AI</p>
+    <aside className="bn-sidebar">
+      {/* ── Logo ──────────────────────────────────────────── */}
+      <div className="bn-sidebar-logo">
+        <div className="bn-logo-icon">
+          <Zap size={17} strokeWidth={2.5} />
+        </div>
+        <div className="bn-logo-text">
+          <span className="bn-logo-title">Bottleneck</span>
+          <span className="bn-logo-sub">Power Outage Prediction</span>
         </div>
       </div>
 
-      <nav className="sidebar-nav">
-        <div className="sidebar-label" style={{paddingTop: 4}}>GridShield</div>
-        {navItems.map(item => (
-          <button key={item.id} className={`nav-item ${page === item.id ? 'active' : ''}`} onClick={() => onNav(item.id)}>
-            <item.icon /><span>{item.label}</span>
-          </button>
-        ))}
+      {/* ── Section label ─────────────────────────────────── */}
+      <div className="bn-nav-section-label">Navigation</div>
+
+      {/* ── Nav items ─────────────────────────────────────── */}
+      <nav className="bn-nav">
+        {navItems.map(item => {
+          const active = page === item.id
+          return (
+            <button
+              key={item.id}
+              className={`bn-nav-item${active ? ' bn-nav-item--active' : ''}`}
+              onClick={() => onNav(item.id)}
+            >
+              <span className="bn-nav-icon">
+                <item.icon size={16} strokeWidth={active ? 2.2 : 1.8} />
+              </span>
+              <span className="bn-nav-label">{item.label}</span>
+              {active && <ChevronRight size={13} className="bn-nav-chevron" />}
+            </button>
+          )
+        })}
       </nav>
 
-      <div className="sidebar-footer">
-        <div className="flex-between">
-          <div className="user-info">
-            <div className="user-name">{user.full_name}</div>
-            <div className="user-email">{user.email}</div>
-          </div>
-          <button className="btn btn-ghost btn-sm" onClick={onLogout} title="Logout">
-            <Power size={16} />
-          </button>
+      {/* ── Divider ───────────────────────────────────────── */}
+      <div className="bn-sidebar-divider" />
+
+      {/* ── Track badge ───────────────────────────────────── */}
+      <div className="bn-track-badge">
+        <Cpu size={12} />
+        <span>IBM Bob Hackathon 2026 · Track U1</span>
+      </div>
+
+      {/* ── Footer / user ─────────────────────────────────── */}
+      <div className="bn-sidebar-footer">
+        <div className="bn-user-avatar">{initials}</div>
+        <div className="bn-user-info">
+          <span className="bn-user-name">{user.full_name || 'User'}</span>
+          <span className="bn-user-email">{user.email}</span>
         </div>
+        <button className="bn-logout-btn" onClick={onLogout} title="Sign out">
+          <LogOut size={15} strokeWidth={1.8} />
+        </button>
       </div>
     </aside>
   )
@@ -126,19 +173,19 @@ export default function App() {
       case 'gs_crew':        return <GSCrewPlanner onSelectAsset={goToGsAsset} />
       case 'gs_scenarios':   return <GSScenarioSim onSelectAsset={goToGsAsset} />
       case 'gs_copilot':     return <GSCopilot />
+      case 'gs_settings':    return <GSSettings />
       default:               return <GSCommandCenter onSelectAsset={goToGsAsset} />
     }
   }
 
-  // AI Advisor needs full-height layout
   const isCopilot = page === 'gs_copilot'
 
   return (
-    <div style={{display:'flex',height:'100vh'}}>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       <Sidebar page={page} onNav={setPage} onLogout={doLogout} user={user} />
       <main className="main">
         {isCopilot ? (
-          <div style={{height:'100%',padding:0}}>
+          <div style={{ height: '100%', padding: 0 }}>
             {renderPage()}
           </div>
         ) : (

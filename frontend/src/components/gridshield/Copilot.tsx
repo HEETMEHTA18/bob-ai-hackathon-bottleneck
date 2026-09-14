@@ -244,8 +244,8 @@ export default function GridShieldCopilot() {
               <Bot size={15} color="#4338ca" />
             </div>
             <div>
-              <div style={{ fontWeight: 600, fontSize: 14, color: '#111827', lineHeight: 1.2 }}>GridShield AI</div>
-              <div style={{ fontSize: 11, color: '#6b7280' }}>Grid Operations Advisor</div>
+              <div style={{ fontWeight: 600, fontSize: 14, color: '#111827', lineHeight: 1.2 }}>Bottleneck AI</div>
+              <div style={{ fontSize: 11, color: '#6b7280' }}>Power Outage Prediction Advisor</div>
             </div>
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -269,7 +269,7 @@ export default function GridShieldCopilot() {
                 <Bot size={28} color="#4338ca" />
               </div>
               <div style={{ fontSize: 22, fontWeight: 700, color: '#111827', marginBottom: 6 }}>
-                GridShield AI
+                Bottleneck AI
               </div>
               <div style={{ fontSize: 14, color: '#6b7280', textAlign: 'center', marginBottom: 32, lineHeight: 1.6, maxWidth: 480 }}>
                 Grid operations intelligence grounded in live telemetry. Ask about any asset, risk, maintenance plan, or crew assignment.
@@ -396,7 +396,7 @@ export default function GridShieldCopilot() {
             </button>
           </div>
           <div style={{ maxWidth: 780, margin: '6px auto 0', fontSize: 11, color: '#9ca3af', textAlign: 'center' }}>
-            GridShield AI -- Grid operations intelligence -- Data grounded in live backend telemetry
+            Bottleneck AI — Power outage prediction · Data grounded in live backend telemetry
           </div>
         </div>
       </div>
