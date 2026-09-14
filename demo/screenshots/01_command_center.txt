@@ -1,6 +1,6 @@
 Screenshot placeholder — replace with actual screenshot before submission.
 
-This file should be replaced with a PNG screenshot of the Bottleneck Command Center,
+This file should be replaced with a PNG screenshot of the GridShield Command Center,
 showing the KPI bar, risk ranking table with TR-1042 as #1 critical, and active alerts.
 
 To capture screenshots:

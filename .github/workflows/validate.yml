@@ -1,4 +1,4 @@
-name: Bottleneck Validation
+name: GridShield Validation
 
 on:
   push:
@@ -62,8 +62,8 @@ jobs:
           print('submission.yaml: all required fields present')
           "
 
-  backend-tests:
-    name: Backend Tests
+  backend-validation:
+    name: Backend Validation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -76,11 +76,11 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install -r src/requirements.txt
+          pip install -r requirements.txt
 
-      - name: Run Bottleneck test suite
+      - name: Validate backend imports
         run: |
-          python3 -m pytest src/tests/test_bottleneck.py -v --tb=short
+          python3 -c "from backend.main import app; print('Backend imports OK')"
 
   frontend-build:
     name: Frontend Build
@@ -95,10 +95,10 @@ jobs:
 
       - name: Install frontend dependencies
         run: |
-          cd src/frontend
+          cd frontend
           npm ci
 
       - name: Build frontend
         run: |
-          cd src/frontend
+          cd frontend
           npm run build

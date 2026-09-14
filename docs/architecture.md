@@ -1,4 +1,4 @@
-# Architecture — Bottleneck AI
+# Architecture — GridShield AI
 
 ## IBM Bob Hackathon 2026 — Track U1
 
@@ -66,8 +66,8 @@ flowchart TD
 
 ```
 backend/
-├── main.py                  FastAPI app entry point (Bottleneck router mounted)
-├── bottleneck/
+├── main.py                  FastAPI app entry point (GridShield router mounted)
+├── gridshield/
 │   ├── contracts.py         All Pydantic data contracts (stable integration seam)
 │   ├── mock_data.py         30-asset deterministic synthetic fleet
 │   ├── ml_adapter.py        MockFailurePredictor + FailurePredictor ABC
@@ -78,8 +78,8 @@ backend/
 │   ├── copilot.py           Grid Operations AI Advisor (Gemini + fallback)
 │   └── routes.py            All 16 /api/gs/* FastAPI endpoints
 ├── weather/
-│   └── provider.py          Open-Meteo HTTP client (reused from Bottleneck)
-└── (legacy Bottleneck modules preserved)
+│   └── provider.py          Open-Meteo HTTP client (reused from Gridkavach)
+└── (legacy Gridkavach modules preserved)
 ```
 
 ---
@@ -88,10 +88,10 @@ backend/
 
 ```
 frontend/src/
-├── App.tsx                  Shell with sidebar navigation (Bottleneck + legacy)
+├── App.tsx                  Shell with sidebar navigation (GridShield + legacy)
 ├── api/
-│   └── bottleneck.ts        TypeScript API client for all /api/gs/* endpoints
-└── components/bottleneck/
+│   └── gridshield.ts        TypeScript API client for all /api/gs/* endpoints
+└── components/gridshield/
     ├── CommandCenter.tsx     Dashboard: KPIs, alert bar, risk ranking table
     ├── AssetIntelligence.tsx Asset detail: telemetry charts, risk breakdown, incidents
     ├── MaintenancePlanner.tsx Filterable priority list with time windows
@@ -104,7 +104,7 @@ frontend/src/
 
 ## API Endpoints
 
-All Bottleneck endpoints are prefixed `/api/gs/`:
+All GridShield endpoints are prefixed `/api/gs/`:
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -154,7 +154,7 @@ Where:
 The ML boundary is deliberately isolated in one file and one class:
 
 ```python
-# backend/bottleneck/ml_adapter.py
+# backend/gridshield/ml_adapter.py
 
 class FailurePredictor(ABC):
     """Stable interface — never changes."""
@@ -181,14 +181,14 @@ class RealFailurePredictor(FailurePredictor):
         ...
 
 def get_predictor() -> FailurePredictor:
-    if os.getenv("BOTTLENECK_USE_REAL_ML") == "1":
+    if os.getenv("GRIDSHIELD_USE_REAL_ML") == "1":
         return RealFailurePredictor()
     return MockFailurePredictor()
 ```
 
 To integrate the real ML pipeline:
 1. Implement `RealFailurePredictor.predict()` in `ml_adapter.py`
-2. Set `BOTTLENECK_USE_REAL_ML=1` in `.env`
+2. Set `GRIDSHIELD_USE_REAL_ML=1` in `.env`
 3. No other changes needed in the entire codebase
 
 ---
@@ -199,4 +199,4 @@ To integrate the real ML pipeline:
 2. **Determinism** — all mock data and predictions are seeded/fixed; demo is reproducible
 3. **Graceful fallback** — weather API failure → mock weather; no LLM key → rule-based copilot
 4. **No frontend coupling to ML** — frontend only knows `FailurePrediction` contract fields
-5. **Legacy Bottleneck preserved** — all original routes and pages remain accessible
+5. **Legacy Gridkavach preserved** — all original routes and pages remain accessible
