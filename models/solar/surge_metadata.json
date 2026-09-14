@@ -1,6 +1,6 @@
 {
-  "best_model": "HistGradientBoosting",
-  "training_date": "2026-09-13T00:12:58.550454",
+  "best_model": "XGBoost",
+  "training_date": "2026-09-14T18:05:19.111567",
   "plant_capacity_kw": 100.0,
   "feature_columns": [
     "shortwave_radiation",
@@ -28,45 +28,67 @@
   "all_model_results": [
     {
       "model": "Ridge",
-      "train_time_s": 0.01,
-      "val_mae": 2.976,
-      "val_rmse": 4.429,
-      "val_r2": 0.9434,
-      "test_mae": 3.808,
-      "test_rmse": 6.119,
-      "test_r2": 0.8769
+      "train_time_s": 0.07,
+      "val_mae": 2.035,
+      "val_rmse": 2.265,
+      "val_r2": 0.9732,
+      "test_mae": 2.126,
+      "test_rmse": 2.401,
+      "test_r2": 0.9794
     },
     {
       "model": "RandomForest",
-      "train_time_s": 0.16,
-      "val_mae": 1.103,
-      "val_rmse": 2.124,
-      "val_r2": 0.987,
-      "test_mae": 1.368,
-      "test_rmse": 2.222,
-      "test_r2": 0.9838
+      "train_time_s": 0.27,
+      "val_mae": 1.719,
+      "val_rmse": 2.938,
+      "val_r2": 0.9549,
+      "test_mae": 1.753,
+      "test_rmse": 2.647,
+      "test_r2": 0.9749
     },
     {
       "model": "HistGradientBoosting",
-      "train_time_s": 0.33,
-      "val_mae": 1.175,
-      "val_rmse": 2.106,
-      "val_r2": 0.9872,
-      "test_mae": 1.319,
-      "test_rmse": 2.206,
-      "test_r2": 0.984
+      "train_time_s": 0.15,
+      "val_mae": 3.545,
+      "val_rmse": 5.478,
+      "val_r2": 0.843,
+      "test_mae": 3.839,
+      "test_rmse": 6.052,
+      "test_r2": 0.8689
     },
     {
       "model": "XGBoost",
-      "train_time_s": 2.5,
-      "val_mae": 1.089,
-      "val_rmse": 1.981,
-      "val_r2": 0.9887,
-      "test_mae": 1.438,
-      "test_rmse": 2.337,
-      "test_r2": 0.982
+      "train_time_s": 0.54,
+      "val_mae": 1.272,
+      "val_rmse": 1.704,
+      "val_r2": 0.9848,
+      "test_mae": 0.797,
+      "test_rmse": 1.227,
+      "test_r2": 0.9946
     }
   ],
-  "quantile_coverage_pct": 61.05,
-  "feature_importance": {}
+  "quantile_coverage_pct": 45.45,
+  "feature_importance": {
+    "direct_normal_irradiance": 0.7971,
+    "shortwave_radiation": 0.1072,
+    "cloud_cover": 0.0535,
+    "diffuse_radiation": 0.0233,
+    "solar_zenith": 0.0045,
+    "clearness_index": 0.0035,
+    "relative_humidity_2m": 0.0025,
+    "temperature_2m": 0.0025,
+    "cloud_cover_rolling_3h": 0.0021,
+    "solar_azimuth": 0.002,
+    "wind_speed_10m": 0.001,
+    "solar_elevation": 0.0003,
+    "surface_pressure": 0.0002,
+    "day_of_year_sin": 0.0001,
+    "day_of_year_cos": 0.0001,
+    "hour_sin": 0.0,
+    "clearsky_ghi": 0.0,
+    "hour_cos": 0.0,
+    "temp_rolling_3h": 0.0,
+    "month_cos": 0.0,
+    "month_sin": 0.0
+  }
 }

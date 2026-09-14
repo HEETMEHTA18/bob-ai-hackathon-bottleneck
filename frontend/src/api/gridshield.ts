@@ -262,4 +262,40 @@ export const gsChat = (message: string, sessionId?: string) =>
     message, session_id: sessionId
   })
 
+// ─── ML Model Management ─────────────────────────────────────────────────────
+
+export interface GSModelStatus {
+  ml_enabled: boolean
+  models_loaded: boolean
+  status: 'healthy' | 'degraded' | 'no_data'
+  model_version: string
+  total_predictions: number
+  unique_assets: number
+  mean_p24: number
+  mean_anomaly_score: number
+  mean_confidence: number
+  fallback_rate: number
+  anomaly_rate_alert: boolean
+  drift_alerts: Array<{ asset_id: string; drift_detected: boolean; delta: number; message: string }>
+  baseline_p24: number | null
+  generated_at: string
+}
+
+export interface GSModelMetrics {
+  evaluated_at?: string
+  models?: {
+    failure_24h?: Record<string, any>
+    failure_72h?: Record<string, any>
+  }
+}
+
+export const gsGetModelStatus = () =>
+  gs.get<GSModelStatus>('/api/gs/model/status')
+
+export const gsGetModelMetrics = () =>
+  gs.get<GSModelMetrics>('/api/gs/model/metrics')
+
+export const gsTriggerRetrain = () =>
+  gs.post<{ job_id: string; status: string; message: string }>('/api/gs/model/retrain', {})
+
 export default gs

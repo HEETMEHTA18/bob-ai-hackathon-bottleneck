@@ -1,14 +1,12 @@
 [
-  "cloud_cover",
-  "latitude",
-  "longitude",
   "shortwave_radiation",
   "direct_normal_irradiance",
   "diffuse_radiation",
+  "temperature_2m",
   "relative_humidity_2m",
   "surface_pressure",
+  "cloud_cover",
   "wind_speed_10m",
-  "temperature_2m",
   "solar_zenith",
   "solar_azimuth",
   "solar_elevation",
@@ -21,13 +19,5 @@
   "day_of_year_sin",
   "day_of_year_cos",
   "cloud_cover_rolling_3h",
-  "temp_rolling_3h",
-  "shortwave_radiation_lag_1h",
-  "shortwave_radiation_rolling_6h",
-  "shortwave_radiation_rolling_24h",
-  "physics_estimate_kw",
-  "abs_latitude",
-  "elevation_m",
-  "surface_tilt",
-  "surface_azimuth"
+  "temp_rolling_3h"
 ]

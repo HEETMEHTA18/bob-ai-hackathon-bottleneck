@@ -1,6 +1,6 @@
 {
-  "best_model": "HistGradientBoosting",
-  "training_date": "2026-09-13T00:12:59.800454",
+  "best_model": "Ridge",
+  "training_date": "2026-09-14T18:05:21.438917",
   "plant_capacity_kw": 100.0,
   "feature_columns": [
     "wind_speed_10m",
@@ -23,32 +23,32 @@
   "all_model_results": [
     {
       "model": "Ridge",
-      "train_time_s": 0.0,
-      "test_mae": 6.526,
-      "test_rmse": 9.402,
-      "test_r2": 0.9196
+      "train_time_s": 0.01,
+      "test_mae": 4.363,
+      "test_rmse": 11.299,
+      "test_r2": 0.8421
     },
     {
       "model": "RandomForest",
-      "train_time_s": 0.14,
-      "test_mae": 3.707,
-      "test_rmse": 4.908,
-      "test_r2": 0.9781
+      "train_time_s": 0.35,
+      "test_mae": 5.301,
+      "test_rmse": 14.431,
+      "test_r2": 0.7425
     },
     {
       "model": "HistGradientBoosting",
-      "train_time_s": 0.26,
-      "test_mae": 3.57,
-      "test_rmse": 4.723,
-      "test_r2": 0.9797
+      "train_time_s": 0.11,
+      "test_mae": 8.626,
+      "test_rmse": 24.686,
+      "test_r2": 0.2464
     },
     {
       "model": "XGBoost",
-      "train_time_s": 0.25,
-      "test_mae": 3.606,
-      "test_rmse": 4.776,
-      "test_r2": 0.9793
+      "train_time_s": 0.62,
+      "test_mae": 5.972,
+      "test_rmse": 12.585,
+      "test_r2": 0.8041
     }
   ],
-  "quantile_coverage_pct": 86.7
+  "quantile_coverage_pct": 63.64
 }
