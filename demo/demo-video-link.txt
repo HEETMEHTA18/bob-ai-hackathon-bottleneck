@@ -1,0 +1,13 @@
+https://youtu.be/placeholder-gridshield-demo
+
+NOTE: Replace this URL with the actual demo video link before final submission.
+The video should demonstrate the full PREDICT → EXPLAIN → PRIORITIZE → POSITION flow
+starting from the Command Center through to the Scenario Simulator.
+
+Suggested demo script (approx. 3–5 minutes):
+1. Show Command Center with TR-1042 as top critical asset
+2. Open Asset Intelligence for TR-1042 — explain risk factors
+3. Show Maintenance Planner — TR-1042 at Priority #1
+4. Show Crew Planner — CREW-07 pre-positioned
+5. Run Severe Storm scenario — show how risk/maintenance/crew changes
+6. Ask AI Copilot "Why is TR-1042 critical?" — show grounded response

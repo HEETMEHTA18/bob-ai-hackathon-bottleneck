@@ -1,0 +1,5 @@
+Screenshot placeholder — replace with actual screenshot before submission.
+
+This file should be replaced with a PNG screenshot of the Asset Intelligence page
+for TR-1042, showing Risk 94/100, Health 38/100, failure probability 87%,
+8,420 customers at risk, 7 critical facilities, and the telemetry charts.

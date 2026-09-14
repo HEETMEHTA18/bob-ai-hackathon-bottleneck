@@ -1,0 +1,82 @@
+---
+# IBM Bob Hackathon 2026 — Official Submission
+# DO NOT modify field names. Fill all required values.
+
+submission:
+  # ── Team ──────────────────────────────────────────────────────
+  team_name: "bottleneck"
+  team_lead:
+    name: "Heet Mehta"
+    email: "heetmehta18125@gmail.com"
+    github: "HEETMEHTA18"
+
+  # ── Track ─────────────────────────────────────────────────────
+  track: "U1"
+  problem_statement: "Power Outage Prediction & Grid Equipment Failure Advisor"
+
+  # ── Project ───────────────────────────────────────────────────
+  project_name: "GridShield AI"
+  tagline: "PREDICT → EXPLAIN → PRIORITIZE → POSITION"
+  short_description: >
+    GridShield is an AI-powered grid reliability platform that combines
+    asset telemetry, weather forecasts, and incident history to predict
+    equipment failures, rank assets by operational risk, generate
+    maintenance plans, and pre-position field crews before outages occur.
+
+  # ── Repository ────────────────────────────────────────────────
+  repository_url: "https://github.com/HEETMEHTA18/bob-ai-hackathon-bottleneck"
+  branch: "main"
+
+  # ── Demo ──────────────────────────────────────────────────────
+  demo_video_url: "https://youtu.be/placeholder-gridshield-demo"
+  live_demo_url: "NOT DEPLOYED"
+
+  # ── Tech Stack ────────────────────────────────────────────────
+  tech_stack:
+    backend:
+      - "Python 3.11"
+      - "FastAPI"
+      - "Pydantic v2"
+      - "SQLAlchemy + aiosqlite"
+      - "Open-Meteo weather API"
+    frontend:
+      - "React 18"
+      - "TypeScript"
+      - "Vite"
+      - "Recharts"
+      - "Lucide Icons"
+    ai:
+      - "IBM Bob (primary AI coding agent)"
+      - "Google Gemini 1.5 Flash (optional AI copilot)"
+      - "Deterministic Mock ML (demo mode, no key required)"
+    infrastructure:
+      - "Docker"
+      - "SQLite (dev) / PostgreSQL (prod)"
+
+  # ── IBM Bob Usage ─────────────────────────────────────────────
+  ibm_bob_usage:
+    primary_agent: true
+    sessions_documented: "docs/BOB_ENGINEERING_LOG.md"
+    summary: >
+      IBM Bob was used as the sole AI coding and development agent throughout
+      the GridShield migration from Gridkavach. Bob performed the repository
+      audit, designed the migration map, implemented all backend modules
+      (contracts, mock ML adapter, risk engine, grid impact engine, API routes),
+      built the full React/TypeScript frontend, and wrote the 44-test suite.
+
+  # ── Source Layout ─────────────────────────────────────────────
+  source_root: "src"
+  backend_path: "src/backend"
+  frontend_path: "src/frontend"
+  setup_guide: "docs/setup-guide.md"
+
+  # ── Key Features ──────────────────────────────────────────────
+  features:
+    - "Impact-aware risk scoring (failure probability × grid impact × weather × criticality × redundancy)"
+    - "30-asset synthetic fleet with realistic degradation profiles"
+    - "Deterministic mock ML with clean swap seam (MockFailurePredictor → RealFailurePredictor)"
+    - "Scenario simulator: Severe Storm / Heatwave / Asset Degradation"
+    - "Crew pre-positioning by specialty and region"
+    - "Grounded AI copilot with fallback (works without API key)"
+    - "16 REST API endpoints under /api/gs/"
+    - "44 automated tests — all passing"

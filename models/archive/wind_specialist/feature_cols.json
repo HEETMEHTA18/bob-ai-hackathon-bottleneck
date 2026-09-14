@@ -1,12 +1,12 @@
 [
-  "temperature_2m",
-  "surface_pressure",
   "wind_speed_10m",
-  "wind_dir_sin",
-  "wind_dir_cos",
   "wind_speed_100m",
   "wind_gusts_10m",
+  "wind_dir_sin",
+  "wind_dir_cos",
   "air_density",
+  "temperature_2m",
+  "surface_pressure",
   "hour_sin",
   "hour_cos",
   "month_sin",
@@ -17,9 +17,5 @@
   "wind_speed_rolling_6h",
   "power_curve_estimate",
   "wind_speed_lag_1h",
-  "wind_speed_lag_6h",
-  "latitude",
-  "abs_latitude",
-  "longitude",
-  "elevation_m"
+  "wind_speed_lag_6h"
 ]

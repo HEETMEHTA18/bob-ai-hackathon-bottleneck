@@ -1,0 +1,4 @@
+Screenshot placeholder — replace with actual screenshot before submission.
+
+This file should be replaced with a PNG screenshot of the Maintenance Planner,
+showing TR-1042 as Priority #1 with "Immediate" action level.

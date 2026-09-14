@@ -1,0 +1,99 @@
+{
+  "timestamp": "2026-09-13T21:02:09.172080",
+  "type": "generic_multi_site_solar",
+  "train_sites": [
+    "bhadla",
+    "chennai",
+    "bengaluru"
+  ],
+  "holdout_site": "leh",
+  "rows": {
+    "train": 24576,
+    "val": 5268,
+    "test": 5268,
+    "heldout_site": 17544
+  },
+  "features": [
+    "cloud_cover",
+    "latitude",
+    "longitude",
+    "shortwave_radiation",
+    "direct_normal_irradiance",
+    "diffuse_radiation",
+    "relative_humidity_2m",
+    "surface_pressure",
+    "wind_speed_10m",
+    "temperature_2m",
+    "solar_zenith",
+    "solar_azimuth",
+    "solar_elevation",
+    "clearsky_ghi",
+    "clearness_index",
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "day_of_year_sin",
+    "day_of_year_cos",
+    "cloud_cover_rolling_3h",
+    "temp_rolling_3h",
+    "shortwave_radiation_lag_1h",
+    "shortwave_radiation_rolling_6h",
+    "shortwave_radiation_rolling_24h",
+    "physics_estimate_kw",
+    "abs_latitude",
+    "elevation_m",
+    "surface_tilt",
+    "surface_azimuth"
+  ],
+  "overfit_check": {
+    "train": {
+      "MAE": 0.46862460954863044,
+      "RMSE": 0.9549842878621361,
+      "nMAE_%": 0.46862460954863044,
+      "R2": 0.9988373055480234,
+      "MAPE_%": 1.7023019070030572,
+      "Forecast_Reliability_Score": 99.53137539045137
+    },
+    "val": {
+      "MAE": 0.5047837861962698,
+      "RMSE": 1.570429073251917,
+      "nMAE_%": 0.5047837861962698,
+      "R2": 0.9958983364059747,
+      "MAPE_%": 2.1782438845162044,
+      "Forecast_Reliability_Score": 99.49521621380373
+    },
+    "test": {
+      "MAE": 0.5574370389545839,
+      "RMSE": 0.8950009864670555,
+      "nMAE_%": 0.5574370389545839,
+      "R2": 0.9989175417836286,
+      "MAPE_%": 2.4753739380994615,
+      "Forecast_Reliability_Score": 99.44256296104541
+    }
+  },
+  "holdout": {
+    "MAE": 0.5574370389545839,
+    "RMSE": 0.8950009864670555,
+    "nMAE_%": 0.5574370389545839,
+    "R2": 0.9989175417836286,
+    "MAPE_%": 2.4753739380994615,
+    "Forecast_Reliability_Score": 99.44256296104541
+  },
+  "quantiles": {
+    "coverage_80_test": 0.8046697038724373,
+    "winkler_80": 2.2529347037352174,
+    "band_scale": 0.75,
+    "cqr_margin_kw": 0.0,
+    "nMAE_p50_%": 0.5336795062388346
+  },
+  "heldout_site_metrics": {
+    "MAE": 2.8634220057963673,
+    "RMSE": 4.827333084677314,
+    "nMAE_%": 2.8634220057963673,
+    "R2": 0.9795967753676214,
+    "MAPE_%": 10.167546445261415,
+    "Forecast_Reliability_Score": 97.13657799420363
+  },
+  "heldout_site_coverage_80": 0.5729594163246694
+}

@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-09-13T15:26:01.585726",
+  "timestamp": "2026-09-13T21:12:33.613906",
   "asset": "wind",
   "capacity_kw": 100.0,
   "test_window": "2636h (last 30%, chronological)",
@@ -36,42 +36,42 @@
       "R2": 0.998812537978887
     },
     "xgb_no_physics": {
-      "MAE": 0.9528996174735374,
-      "RMSE": 1.313420269490521,
-      "nMAE_%": 0.9528996174735372,
-      "R2": 0.9989200368965
+      "MAE": 0.9411752953910819,
+      "RMSE": 1.3023003903175534,
+      "nMAE_%": 0.9411752953910819,
+      "R2": 0.9989382461826437
     },
     "deployed_surge": {
-      "MAE": 0.9237847738489096,
-      "RMSE": 1.3850694371241155,
-      "nMAE_%": 0.9237847738489096,
-      "R2": 0.9987989956451417
+      "MAE": 0.90787876415304,
+      "RMSE": 1.3465252259219738,
+      "nMAE_%": 0.90787876415304,
+      "R2": 0.9988649095297779
     }
   },
   "diebold_mariano_vs_deployed": {
     "persistence_1h": {
-      "stat": 22.815,
+      "stat": 22.857,
       "p_value": 0.0
     },
     "persistence_24h": {
-      "stat": 20.117,
+      "stat": 20.135,
       "p_value": 0.0
     },
     "climatology": {
-      "stat": 49.34,
+      "stat": 49.428,
       "p_value": 0.0
     },
     "naive_mean": {
-      "stat": 48.264,
+      "stat": 48.345,
       "p_value": 0.0
     },
     "physics_only": {
-      "stat": -4.511,
-      "p_value": 0.0
+      "stat": -2.974,
+      "p_value": 0.0029
     },
     "xgb_no_physics": {
-      "stat": 2.862,
-      "p_value": 0.0042
+      "stat": 3.749,
+      "p_value": 0.0002
     },
     "deployed_surge": {
       "stat": NaN,

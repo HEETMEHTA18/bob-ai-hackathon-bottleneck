@@ -144,3 +144,26 @@ Backend:  starts, all routes registered
 TR-1042:  risk=100, rank=#1 ✓
 Demo flow: PREDICT → EXPLAIN → PRIORITIZE → POSITION ✓
 ```
+
+---
+
+## Session 6 — Submission Template & Documentation
+
+**Work performed:**
+- Created `submission.yaml` with all required hackathon fields (team, track, project, IBM Bob usage)
+- Created `docs/problem-statement.md` — full problem context, scale, why existing approaches fail
+- Created `docs/solution-overview.md` — solution architecture, key differentiators, application pages
+- Created `docs/architecture.md` — full Mermaid architecture diagram, module maps, API table, risk formula, ML seam
+- Created `docs/setup-guide.md` — step-by-step verified setup with troubleshooting section
+- Created `CONTRIBUTING.md` — developer onboarding, ML seam integration guide, code style
+- Created `demo/` directory with `demo-video-link.txt`, `live-demo-url.txt`, `demo/README.md`, 5 screenshot placeholders
+- Created `presentation/slides-placeholder.txt` with suggested slide structure
+- Created `.github/workflows/validate.yml` — 3-job CI: structure check, backend tests, frontend build
+- Created `src/` directory with symlinks to `backend/`, `frontend/`, `tests/` + `src/README.md` + `src/.env.example`
+- Added `pyyaml`, `pytest`, `httpx` to `requirements.txt` (needed for CI validation step)
+- Updated `.gitignore` with `src/` patterns
+
+**Key outcome:**
+- Repository now matches IBM Bob Hackathon submission template structure
+- GitHub Actions CI: validate structure + run 44 backend tests + frontend build
+- All required submission files present

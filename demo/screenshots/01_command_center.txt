@@ -1,0 +1,11 @@
+Screenshot placeholder — replace with actual screenshot before submission.
+
+This file should be replaced with a PNG screenshot of the GridShield Command Center,
+showing the KPI bar, risk ranking table with TR-1042 as #1 critical, and active alerts.
+
+To capture screenshots:
+1. Start the backend: uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+2. Start the frontend: cd frontend && npm run dev
+3. Open http://localhost:5173
+4. Navigate to each page and take a screenshot
+5. Replace these placeholder files with actual PNGs

@@ -1,0 +1,91 @@
+{
+  "timestamp": "2026-09-13T21:10:20.801276",
+  "type": "generic_multi_site_wind",
+  "train_sites": [
+    "jaisalmer",
+    "kanyakumari",
+    "satara"
+  ],
+  "holdout_site": "coimbatore",
+  "rows": {
+    "train": 18444,
+    "val": 3954,
+    "test": 3954,
+    "heldout_site": 8784
+  },
+  "features": [
+    "temperature_2m",
+    "surface_pressure",
+    "wind_speed_10m",
+    "wind_dir_sin",
+    "wind_dir_cos",
+    "wind_speed_100m",
+    "wind_gusts_10m",
+    "air_density",
+    "hour_sin",
+    "hour_cos",
+    "month_sin",
+    "month_cos",
+    "day_of_year_sin",
+    "day_of_year_cos",
+    "wind_speed_rolling_3h",
+    "wind_speed_rolling_6h",
+    "power_curve_estimate",
+    "wind_speed_lag_1h",
+    "wind_speed_lag_6h",
+    "latitude",
+    "abs_latitude",
+    "longitude",
+    "elevation_m"
+  ],
+  "overfit_check": {
+    "train": {
+      "MAE": 0.8502083077053918,
+      "RMSE": 1.7023617936418907,
+      "nMAE_%": 0.8502083077053918,
+      "R2": 0.9985903995949346,
+      "MAPE_%": 2.209760236676132,
+      "Forecast_Reliability_Score": 99.14979169229461
+    },
+    "val": {
+      "MAE": 0.9021581856429491,
+      "RMSE": 1.9952053645363603,
+      "nMAE_%": 0.902158185642949,
+      "R2": 0.9980011456869685,
+      "MAPE_%": 2.418707708532631,
+      "Forecast_Reliability_Score": 99.09784181435704
+    },
+    "test": {
+      "MAE": 0.82578198187785,
+      "RMSE": 1.4382093086847105,
+      "nMAE_%": 0.8257819818778499,
+      "R2": 0.9986751063435371,
+      "MAPE_%": 3.563068348320645,
+      "Forecast_Reliability_Score": 99.17421801812215
+    }
+  },
+  "holdout": {
+    "MAE": 0.82578198187785,
+    "RMSE": 1.4382093086847105,
+    "nMAE_%": 0.8257819818778499,
+    "R2": 0.9986751063435371,
+    "MAPE_%": 3.563068348320645,
+    "Forecast_Reliability_Score": 99.17421801812215
+  },
+  "quantiles": {
+    "coverage_80_test": 0.8194233687405159,
+    "winkler_80": 51.76558743941484,
+    "band_scale": 0.9999999999999999,
+    "cqr_margin_kw": 5.551115123125783e-17,
+    "nMAE_p50_%": 0.8726761139572407
+  },
+  "heldout_site_metrics": {
+    "MAE": 1.0119749809470886,
+    "RMSE": 1.907172478116756,
+    "nMAE_%": 1.0119749809470886,
+    "R2": 0.9979143741222506,
+    "MAPE_%": 2.759583414681167,
+    "Forecast_Reliability_Score": 98.98802501905291
+  },
+  "heldout_site_coverage_80": 0.8681693989071039
+}

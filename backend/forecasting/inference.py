@@ -34,12 +34,12 @@ def _load_solar_calibration() -> dict:
     return _solar_calibration
 
 
-def _load_wind_calibration() -> float:
+def _load_wind_calibration() -> dict:
     global _wind_calibration
     if _wind_calibration is None:
         p = MODELS_DIR / "wind" / "calibration.json"
         _wind_calibration = json.loads(p.read_text()) if p.exists() else {}
-    return _wind_calibration.get("band_scale", 1.0)
+    return _wind_calibration
 
 
 def _load_solar_model():
@@ -105,7 +105,10 @@ def _load_wind_quantile():
 
 # ─── SURGE Feature Engineering (for inference) ─────────────────
 def _build_surge_solar_features(df: pd.DataFrame, lat: float, lon: float,
-                                capacity_kw: float = 100.0) -> pd.DataFrame:
+                                capacity_kw: float = 100.0,
+                                altitude: float = 210.0,
+                                surface_tilt: float = 26.0,
+                                surface_azimuth: float = 180.0) -> pd.DataFrame:
     """
     SURGE's exact solar feature pipeline for inference.
     Produces the same 21 features used during training.
@@ -202,8 +205,8 @@ def _build_surge_solar_features(df: pd.DataFrame, lat: float, lon: float,
             phys_df = phys_df.rename(columns={"temperature_2m": "temp_air"})
         sp = {
             "latitude": lat, "longitude": lon,
-            "altitude": 210, "capacity_kw": capacity_kw,
-            "surface_tilt": 26, "surface_azimuth": 180,
+            "altitude": altitude, "capacity_kw": capacity_kw,
+            "surface_tilt": surface_tilt, "surface_azimuth": surface_azimuth,
         }
         bias = _load_solar_calibration().get("physics_bias_scale", 1.0)
         physics_kw = run_physics_model(phys_df, sp) * bias
@@ -321,15 +324,46 @@ def _apply_wind_physics(preds: np.ndarray, df: pd.DataFrame, capacity: float) ->
 
 
 def _enforce_monotonicity(p10: np.ndarray, p50: np.ndarray, p90: np.ndarray) -> tuple:
-    """SURGE: P10 <= P50 <= P90."""
-    p50 = np.maximum(p10, p50)
-    p90 = np.maximum(p50, p90)
+    """Ensure p10 <= p50 <= p90 element-wise."""
+    p10 = np.minimum(p10, p50)
+    p90 = np.maximum(p90, p50)
     return p10, p50, p90
+
+
+def _add_site_context(df: pd.DataFrame, lat: float, lon: float,
+                     elevation: float, surface_tilt: float, surface_azimuth: float) -> pd.DataFrame:
+    """Append site-context features used by the generic multi-site models.
+
+    These continuously-valued columns are what let the model interpolate across
+    climates and plant geometry instead of memorising a site id."""
+    ctx = {
+        "latitude": lat, "abs_latitude": abs(lat), "longitude": lon,
+        "elevation_m": elevation, "surface_tilt": surface_tilt,
+        "surface_azimuth": surface_azimuth,
+    }
+    for k, v in ctx.items():
+        if k not in df.columns:
+            df[k] = v
+    return df
+
+
+def _apply_calibrated_bands(p10: np.ndarray, p50: np.ndarray, p90: np.ndarray,
+                            calibration: dict, capacity: float = 100.0) -> tuple:
+    """Scale deviation bands around p50 then widen by the conformal CQR margin."""
+    band_scale = calibration.get("band_scale", 1.0)
+    margin = calibration.get("cqr_margin_kw", 0.0)
+    d10 = np.clip(p50 - p10, 1e-6, None)
+    d90 = np.clip(p90 - p50, 1e-6, None)
+    p10 = np.clip(p50 - band_scale * d10 - margin, 0, capacity)
+    p90 = np.clip(p50 + band_scale * d90 + margin, 0, capacity)
+    return _enforce_monotonicity(p10, p50, p90)
 
 
 # ─── Predictions ───────────────────────────────────────────────
 def predict_solar(weather_df: pd.DataFrame, latitude: float, longitude: float,
-                  capacity_kw: float = 100) -> dict:
+                  capacity_kw: float = 100,
+                  altitude: float = 210.0, surface_tilt: float = 26.0,
+                  surface_azimuth: float = 180.0) -> dict:
     """
     SURGE-inspired solar prediction with XGBoost + physics constraints.
 
@@ -340,8 +374,10 @@ def predict_solar(weather_df: pd.DataFrame, latitude: float, longitude: float,
     """
     model, feature_cols = _load_solar_model()
 
-    # Build SURGE features (fixed 100 kW physics scale, as trained)
-    df = _build_surge_solar_features(weather_df.copy(), latitude, longitude, 100.0)
+    # Build SURGE features (fixed 100 kW physics scale, as trained) + site context
+    df = _build_surge_solar_features(weather_df.copy(), latitude, longitude,
+                                     100.0, altitude, surface_tilt, surface_azimuth)
+    _add_site_context(df, latitude, longitude, altitude, surface_tilt, surface_azimuth)
 
     available_cols = [c for c in feature_cols if c in df.columns]
     X = df[available_cols].fillna(0)
@@ -371,14 +407,9 @@ def predict_solar(weather_df: pd.DataFrame, latitude: float, longitude: float,
             # Enforce monotonicity
             p10, p50, p90 = _enforce_monotonicity(p10, p50, p90)
 
-            # Band calibration (deviation scaling around p50, from real-data training)
-            band_scale = _load_solar_calibration().get("band_scale", 1.0)
-            if band_scale != 1.0:
-                d10 = np.clip(p50 - p10, 1e-6, None)
-                d90 = np.clip(p90 - p50, 1e-6, None)
-                p10 = np.clip(p50 - band_scale * d10, 0, 100.0)
-                p90 = np.clip(p50 + band_scale * d90, 0, 100.0)
-                p10, p50, p90 = _enforce_monotonicity(p10, p50, p90)
+            # Band calibration: deviation scaling around p50 + conformal CQR margin
+            p10, p50, p90 = _apply_calibrated_bands(
+                p10, p50, p90, _load_solar_calibration())
             # Scale to requested capacity (features stay at trained 100 kW scale)
             s = capacity_kw / 100.0
             p10 = np.clip(p10 * s, 0, capacity_kw)
@@ -418,7 +449,9 @@ def predict_solar(weather_df: pd.DataFrame, latitude: float, longitude: float,
 
 
 def predict_wind(weather_df: pd.DataFrame, hub_height: float = 80.0,
-                 rated_capacity_kw: float = 100) -> dict:
+                 rated_capacity_kw: float = 100,
+                 latitude: float = 26.9157, longitude: float = 70.9083,
+                 altitude: float = 225.0) -> dict:
     """
     SURGE-inspired wind prediction with LightGBM + physics constraints.
 
@@ -428,8 +461,9 @@ def predict_wind(weather_df: pd.DataFrame, hub_height: float = 80.0,
     """
     model, feature_cols = _load_wind_model()
 
-    # Build SURGE features (fixed 100 kW physics scale, as trained)
+    # Build SURGE features (fixed 100 kW physics scale, as trained) + site context
     df = _build_surge_wind_features(weather_df.copy(), 100.0)
+    _add_site_context(df, latitude, longitude, altitude, 0.0, 0.0)
 
     available_cols = [c for c in feature_cols if c in df.columns]
     X = df[available_cols].fillna(0)
@@ -457,14 +491,9 @@ def predict_wind(weather_df: pd.DataFrame, hub_height: float = 80.0,
 
             p10, p50, p90 = _enforce_monotonicity(p10, p50, p90)
 
-            # Band calibration (deviation scaling around p50, from real-data training)
-            band_scale = _load_wind_calibration()
-            if band_scale != 1.0:
-                d10 = np.clip(p50 - p10, 1e-6, None)
-                d90 = np.clip(p90 - p50, 1e-6, None)
-                p10 = np.clip(p50 - band_scale * d10, 0, 100.0)
-                p90 = np.clip(p50 + band_scale * d90, 0, 100.0)
-                p10, p50, p90 = _enforce_monotonicity(p10, p50, p90)
+            # Band calibration: deviation scaling around p50 + conformal CQR margin
+            p10, p50, p90 = _apply_calibrated_bands(
+                p10, p50, p90, _load_wind_calibration())
             # Scale to requested capacity (features stay at trained 100 kW scale)
             s = rated_capacity_kw / 100.0
             p10 = np.clip(p10 * s, 0, rated_capacity_kw)
@@ -506,7 +535,8 @@ def predict_hybrid(df: pd.DataFrame, latitude: float, longitude: float,
     wind_kw = capacity_kw * (1 - solar_share)
 
     solar = predict_solar(df, latitude, longitude, solar_kw)
-    wind = predict_wind(df.copy(), hub_height=80, rated_capacity_kw=wind_kw)
+    wind = predict_wind(df.copy(), hub_height=80, rated_capacity_kw=wind_kw,
+                        latitude=latitude, longitude=longitude)
 
     p50 = np.array(solar["p50"]) + np.array(wind["p50"])
     p10 = np.array(solar["p10"]) + np.array(wind["p10"])
@@ -542,7 +572,8 @@ def predict_from_weather_records(records: list, site_type: str,
     df = df.rename(columns={k: v for k, v in col_map.items() if k in df.columns})
 
     if site_type == "wind":
-        return predict_wind(df, hub_height=80, rated_capacity_kw=capacity_kw)
+        return predict_wind(df, hub_height=80, rated_capacity_kw=capacity_kw,
+                            latitude=latitude, longitude=longitude)
     elif site_type == "hybrid":
         return predict_hybrid(df, latitude, longitude, capacity_kw)
     else:

@@ -1,0 +1,4 @@
+Screenshot placeholder — replace with actual screenshot before submission.
+
+This file should be replaced with a PNG screenshot of the Scenario Simulator
+showing before/after risk comparison for the Severe Storm scenario.

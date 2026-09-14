@@ -34,6 +34,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from backend.forecasting.inference import (
     predict_solar, predict_wind, _build_surge_solar_features, _build_surge_wind_features,
+    _add_site_context,
     _load_solar_model, _load_wind_model,
 )
 from backend.forecasting.solar import run_physics_model, persistence_baseline
@@ -124,6 +125,8 @@ def run_solar():
 
     feats_tr = _build_surge_solar_features(tr.copy(), LAT, LON)
     feats_te = _build_surge_solar_features(te.copy(), LAT, LON)
+    _add_site_context(feats_tr, LAT, LON, 210, 26, 180)
+    _add_site_context(feats_te, LAT, LON, 210, 26, 180)
     model, feat_cols = _load_solar_model()
 
     # deployed SURGE model
@@ -188,6 +191,7 @@ def run_wind():
     dep = np.array(out["prediction"]) if "prediction" in out else np.array(out["p50"])
 
     feats_te = _build_surge_wind_features(te.copy())
+    _add_site_context(feats_te, LAT, LON, 225, 0, 0)
     X_te = feats_te[[c for c in feat_cols if c in feats_te.columns]].fillna(0)
     xgb_raw = np.clip(model.predict(X_te), 0, CAPACITY)
 

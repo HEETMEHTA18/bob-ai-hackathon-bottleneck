@@ -51,3 +51,9 @@ gcloud*/
 # Jupyter
 notebooks/
 .ipynb_checkpoints/
+
+# src/ symlink targets (already covered by root paths above)
+src/venv/
+src/.venv/
+src/frontend/node_modules/
+src/frontend/dist/

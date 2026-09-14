@@ -1,0 +1,9 @@
+NOT DEPLOYED
+
+GridShield runs locally. See docs/setup-guide.md for step-by-step instructions.
+
+Quick start:
+  pip install -r requirements.txt
+  uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+  cd frontend && npm install && npm run dev
+  # Open http://localhost:5173

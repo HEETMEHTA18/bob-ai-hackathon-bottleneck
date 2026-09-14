@@ -1,0 +1,104 @@
+name: GridShield Validation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-structure:
+    name: Validate Submission Structure
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required files exist
+        run: |
+          echo "Checking required submission files..."
+          required_files=(
+            "submission.yaml"
+            "README.md"
+            "CONTRIBUTING.md"
+            ".gitignore"
+            ".env.example"
+            "docs/problem-statement.md"
+            "docs/solution-overview.md"
+            "docs/architecture.md"
+            "docs/setup-guide.md"
+            "demo/demo-video-link.txt"
+            "demo/live-demo-url.txt"
+            "demo/README.md"
+          )
+          for f in "${required_files[@]}"; do
+            if [ ! -f "$f" ]; then
+              echo "MISSING: $f"
+              exit 1
+            else
+              echo "OK: $f"
+            fi
+          done
+
+      - name: Check .env is not committed
+        run: |
+          if [ -f ".env" ] && git ls-files --error-unmatch .env 2>/dev/null; then
+            echo "ERROR: .env file is committed to the repository!"
+            exit 1
+          fi
+          echo "OK: .env is not tracked"
+
+      - name: Check submission.yaml has required fields
+        run: |
+          python3 -c "
+          import yaml, sys
+          with open('submission.yaml') as f:
+              data = yaml.safe_load(f)
+          sub = data.get('submission', {})
+          required = ['team_name', 'track', 'project_name', 'repository_url']
+          missing = [r for r in required if not sub.get(r)]
+          if missing:
+              print(f'Missing fields in submission.yaml: {missing}')
+              sys.exit(1)
+          print('submission.yaml: all required fields present')
+          "
+
+  backend-tests:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run GridShield test suite
+        run: |
+          python3 -m pytest tests/test_gridshield.py -v --tb=short
+
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
