@@ -12,29 +12,31 @@ Bottleneck AI is an enterprise grid reliability platform that combines asset tel
 
 ```bash
 # 1. Install backend dependencies
-pip install -r requirements.txt
+pip install -r src/requirements.txt
 
 # 2. Start the backend (port 8000)
-uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+cd src && uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000
+# OR from root:
+python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000 --app-dir src
 
-# 3. Build and serve the frontend
-cd frontend && npm install && npm run build
+# 3. Build and serve the frontend (production SPA)
+cd src/frontend && npm install && npm run build
 # Then open http://localhost:8000 in your browser
 
-# OR for frontend dev server:
-cd frontend && npm run dev   # http://localhost:5173
+# OR run frontend dev server:
+cd src/frontend && npm run dev   # http://localhost:5173
 ```
 
-No external API keys are required. The application works fully in demo mode using deterministic/real ML models and synthetic asset telemetry.
+No external API keys are required. The application works fully in demo mode using real & deterministic ML models and synthetic asset telemetry.
 
 **Optional:** Set `GEMINI_API_KEY` in `.env` to enable the Gemini-powered AI copilot.
 
 ---
 
-## Key Features & Operations Views
+## Operations Views
 
-| Feature View | Description |
-|--------------|-------------|
+| View | Description |
+|------|-------------|
 | 🛡️ **Command Center** | Live operational dashboard with fleet KPIs, risk-ranked asset ranking, and real-time failure alerts |
 | 🔍 **Asset Intelligence** | Diagnostic detail view per asset — hourly telemetry (48h), 24h/72h failure probabilities, health score, grid impact, and incidents |
 | 🚀 **Maintenance Planner** | Impact-aware maintenance prioritisation ranked by operational consequence, downtime, safety risks, and crew assignments |
@@ -47,7 +49,7 @@ No external API keys are required. The application works fully in demo mode usin
 
 ## API Endpoints
 
-All Bottleneck endpoints live under `/api/bottleneck/` (with backwards-compatible `/api/gs/` aliases):
+All Bottleneck endpoints live under `/api/bottleneck/` (with `/api/gs/` aliases for backwards compatibility):
 
 ```
 GET  /api/bottleneck/assets                        # List grid assets (with filtering)
@@ -70,6 +72,24 @@ GET  /api/bottleneck/model/status                  # ML model health & drift mon
 GET  /api/bottleneck/model/metrics                 # Evaluation metrics
 POST /api/bottleneck/model/retrain                 # Trigger background model retraining
 GET  /health                                       # Service health check
+```
+
+---
+
+## Running Automated Tests
+
+```bash
+# Run full Bottleneck test suite (44 tests)
+python -m pytest src/tests/test_bottleneck.py -v
+```
+
+---
+
+## ML Retraining Pipeline
+
+```bash
+# Run end-to-end ML model retraining pipeline
+cd src && python -m backend.bottleneck.ml.training.train_models
 ```
 
 ---
