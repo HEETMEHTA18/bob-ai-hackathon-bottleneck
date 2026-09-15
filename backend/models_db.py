@@ -122,3 +122,16 @@ class ModelVersion(Base):
     artifact_path = Column(String(500))
     is_active = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class RevokedToken(Base):
+    """Tracks revoked refresh token JTIs so they cannot be reused."""
+    __tablename__ = "revoked_tokens"
+
+    id = Column(String(36), primary_key=True, default=gen_uuid)
+    # unique=True creates a unique constraint/index on jti
+    jti = Column(String(36), nullable=False, unique=True)
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False)
+    # Store expiry so a background task can prune old rows
+    expires_at = Column(DateTime, nullable=False)
+    revoked_at = Column(DateTime, default=datetime.utcnow)

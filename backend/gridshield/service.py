@@ -5,6 +5,7 @@ Single entry point for computing all GridShield outputs for one or all assets.
 Keeps route handlers thin.
 """
 from __future__ import annotations
+import threading
 from typing import List, Optional, Dict
 
 from backend.gridshield.contracts import (
@@ -27,12 +28,15 @@ import time as _time
 # ─── Ranking cache (TTL) ──────────────────────────────────────────────────────
 # Full ranking over 30 assets runs XGBoost inference per asset (~2-3s cold).
 # Cache per scenario so dashboard polls + chatbot + KPIs share one computation.
+# A threading.Lock prevents concurrent computations from racing on the same key.
 _RANKING_CACHE: dict[str, tuple[float, list]] = {}
 _RANKING_TTL_SECONDS = 60.0
+_RANKING_LOCK = threading.Lock()
 
 
 def invalidate_ranking_cache() -> None:
-    _RANKING_CACHE.clear()
+    with _RANKING_LOCK:
+        _RANKING_CACHE.clear()
 
 
 def _compute_for_asset(
@@ -60,12 +64,29 @@ def _compute_for_asset(
 
 
 def get_full_ranking(scenario: Optional[str] = None) -> List[RiskRankingEntry]:
-    """Compute ranked risk assessment for all assets (cached, TTL 60s)."""
+    """Compute ranked risk assessment for all assets (cached, TTL 60s).
+
+    A threading.Lock prevents two threads/coroutines from computing the same
+    cache key simultaneously (duplicate-work race condition).
+    """
     cache_key = scenario or "__base__"
+
+    # Fast path: check cache without holding the lock
     cached = _RANKING_CACHE.get(cache_key)
     if cached and (_time.time() - cached[0]) < _RANKING_TTL_SECONDS:
         return cached[1]
 
+    with _RANKING_LOCK:
+        # Re-check inside the lock — another thread may have populated it
+        cached = _RANKING_CACHE.get(cache_key)
+        if cached and (_time.time() - cached[0]) < _RANKING_TTL_SECONDS:
+            return cached[1]
+
+        return _compute_full_ranking(scenario, cache_key)
+
+
+def _compute_full_ranking(scenario: Optional[str], cache_key: str) -> List[RiskRankingEntry]:
+    """Internal — must be called with _RANKING_LOCK held."""
     entries = []
     available_crews = list(CREWS)
 

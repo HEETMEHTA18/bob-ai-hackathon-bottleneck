@@ -1,0 +1,761 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bottleneck — Final Hackathon Demo Script</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.65;
+    color: #1f2328;
+    background: #ffffff;
+    padding: 32px 20px 48px;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+
+  /* ── Typography ─── */
+  h1 { font-size: 24px; font-weight: 800; color: #1f2328; margin-bottom: 4px; }
+  h2 { font-size: 17px; font-weight: 700; color: #1f2328; margin: 36px 0 12px; border-top: 2px solid #e5e7eb; padding-top: 18px; }
+  h3 { font-size: 14px; font-weight: 700; color: #1f2328; margin: 0 0 10px; }
+  p  { margin-bottom: 10px; }
+  ul, ol { padding-left: 20px; margin-bottom: 10px; }
+  li { margin-bottom: 4px; }
+  strong { font-weight: 700; }
+  code {
+    background: #f7f8fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 12px;
+    color: #1f2328;
+  }
+
+  /* ── Tagline ─── */
+  .tagline {
+    font-size: 13px;
+    color: #57606a;
+    margin-bottom: 8px;
+  }
+  .meta-row {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: #57606a;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .meta-row span { display: flex; align-items: center; gap: 4px; }
+
+  /* ── Flow diagram ─── */
+  .flow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+    margin: 14px 0 20px;
+    font-size: 12px;
+  }
+  .flow-box {
+    background: #f7f8fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-weight: 600;
+    color: #1f2328;
+  }
+  .flow-arrow {
+    color: #57606a;
+    font-size: 16px;
+    font-weight: 300;
+  }
+  .flow-box.accent { background: #eff6ff; border-color: #3b82d4; color: #3b82d4; }
+  .flow-box.red    { background: #fef2f2; border-color: #dc2626; color: #b91c1c; }
+  .flow-box.green  { background: #f0fdf4; border-color: #16a34a; color: #15803d; }
+  .flow-box.purple { background: #faf5ff; border-color: #7c5cd8; color: #6d28d9; }
+
+  /* ── Scene blocks ─── */
+  .scene {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .scene-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f7f8fa;
+    padding: 10px 16px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .scene-title { font-weight: 700; font-size: 13px; color: #1f2328; }
+  .scene-duration {
+    font-size: 11px;
+    font-weight: 600;
+    color: #57606a;
+    background: #e5e7eb;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .scene-body { padding: 16px; }
+  .scene-body .label {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #57606a;
+    background: #f7f8fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 3px;
+    padding: 2px 6px;
+    margin-bottom: 4px;
+  }
+  .scene-body .say-block {
+    background: #fffbf0;
+    border-left: 3px solid #d97706;
+    padding: 10px 14px;
+    margin: 8px 0 14px;
+    font-style: italic;
+    color: #1f2328;
+    font-size: 13.5px;
+    line-height: 1.7;
+    border-radius: 0 4px 4px 0;
+  }
+  .scene-body .screen-block {
+    background: #f0f9ff;
+    border-left: 3px solid #3b82d4;
+    padding: 8px 12px;
+    margin: 6px 0 12px;
+    font-size: 12.5px;
+    border-radius: 0 4px 4px 0;
+  }
+  .scene-body .action-block {
+    background: #f0fdf4;
+    border-left: 3px solid #16a34a;
+    padding: 8px 12px;
+    margin: 6px 0 12px;
+    font-size: 12.5px;
+    border-radius: 0 4px 4px 0;
+  }
+  .scene-body .takeaway-block {
+    background: #faf5ff;
+    border-left: 3px solid #7c5cd8;
+    padding: 8px 12px;
+    margin: 6px 0 0;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #5b21b6;
+    border-radius: 0 4px 4px 0;
+  }
+
+  /* ── Data values table ─── */
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12.5px; }
+  th { background: #f7f8fa; text-align: left; padding: 7px 10px; font-weight: 600; color: #57606a; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1.5px solid #e5e7eb; }
+  td { padding: 7px 10px; border-bottom: 1px solid #f3f4f6; color: #1f2328; }
+  tr:last-child td { border-bottom: none; }
+  .val-red { color: #b91c1c; font-weight: 700; }
+  .val-amber { color: #d97706; font-weight: 700; }
+  .val-green { color: #15803d; font-weight: 700; }
+  .val-blue { color: #3b82d4; font-weight: 700; }
+
+  /* ── Checklist ─── */
+  .checklist { list-style: none; padding: 0; }
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 5px 0;
+    font-size: 13px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .chk {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 3px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  /* ── Timing table ─── */
+  .timing-bar {
+    display: flex;
+    gap: 2px;
+    margin: 14px 0;
+    height: 20px;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .tb-seg {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    color: #fff;
+    transition: flex 0.3s;
+  }
+
+  /* ── Differentiators ─── */
+  .diff-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .diff-card .diff-num {
+    font-size: 20px;
+    font-weight: 800;
+    color: #3b82d4;
+    margin-right: 8px;
+  }
+  .diff-card .diff-title { font-weight: 700; font-size: 14px; }
+
+  /* ── Bob section ─── */
+  .bob-card {
+    background: #f7f8fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+  .bob-label {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: #1f2328;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-bottom: 6px;
+  }
+
+  /* ── Takeaways ─── */
+  .takeaway-list { counter-reset: tk; padding: 0; list-style: none; }
+  .takeaway-list li {
+    counter-increment: tk;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px 0;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 13.5px;
+  }
+  .takeaway-list li:last-child { border-bottom: none; }
+  .takeaway-list li::before {
+    content: counter(tk);
+    min-width: 24px;
+    height: 24px;
+    background: #1f2328;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* ── Conclusion banner ─── */
+  .conclusion {
+    background: #1f2328;
+    color: #fff;
+    border-radius: 8px;
+    padding: 20px 22px;
+    margin: 20px 0;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.6;
+  }
+  .conclusion .sub { font-size: 12px; font-weight: 400; color: #9ca3af; margin-top: 8px; }
+
+  /* ── Footer ─── */
+  .footer {
+    text-align: center;
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid #e5e7eb;
+    font-size: 12px;
+    color: #57606a;
+  }
+
+  /* ── Warning ─── */
+  .warn {
+    background: #fffbf0;
+    border: 1px solid #fde68a;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 12.5px;
+    color: #92400e;
+    margin: 8px 0 16px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  
+  <h1>Bottleneck — GridShield AI</h1>
+  <div class="tagline">IBM Bob Hackathon 2026 · Track U1 · Power Outage Prediction &amp; Grid Equipment Failure Advisor</div>
+  <div class="meta-row">
+    <span>Team: <strong>bottleneck</strong></span>
+    <span>Stack: Python / FastAPI + React / TypeScript</span>
+    <span>ML: XGBoost (real) + deterministic mock fallback</span>
+    <span>AI Copilot: grounded advisor (Gemini optional)</span>
+  </div>
+
+  
+  <h2>1. Platform Explanation</h2>
+  <p>Power utilities lose billions annually to preventable failures. The real problem isn't that we can't detect failing equipment — it's that existing tools rank assets by raw probability alone, completely ignoring <em>who</em> loses power if that asset fails and how badly. A small transformer serving a hospital district gets buried below a low-impact rural switch with the same failure score. That's the gap.</p>
+  <p><strong>GridShield</strong> (team name: Bottleneck) fuses three data streams — 48h asset telemetry, regional weather exposure, and historical incident records — into a single composit risk score that ranks 30 monitored assets by <em>operational impact</em>, not just probability. It then converts every ranked risk into a concrete maintenance action and automatically assigns and pre-positions field crews using specialty matching and haversine distance-based ETA.</p>
+  <p>The platform has four distinct operational layers:</p>
+  <ol>
+    <li><strong>Prediction layer</strong> — failure probability at 24h and 72h horizons (XGBoost models trained on synthetic fleet data, with a deterministic mock fallback for demo reliability)</li>
+    <li><strong>Impact layer</strong> — how many customers go dark, how many critical facilities are affected, how many downstream assets cascade if this one fails</li>
+    <li><strong>Decision layer</strong> — composite risk ranking, impact-aware maintenance priorities, crew pre-positioning plan</li>
+    <li><strong>Advisor layer</strong> — a grounded AI copilot (Gemini 2.0 Flash when the key is present, deterministic intent-matched fallback otherwise) that answers natural-language operational questions using only verified backend data</li>
+  </ol>
+
+  
+  <h2>2. End-to-End Data Flow</h2>
+  <div class="flow">
+    <div class="flow-box">Asset Telemetry<br /><small style="font-weight:400;font-size:10px">48h hourly<br />oil temp, load, vibration,<br />partial discharge</small></div>
+    <div class="flow-arrow">+</div>
+    <div class="flow-box">Weather Exposure<br /><small style="font-weight:400;font-size:10px">temp, wind, precip,<br />storm severity<br />per region</small></div>
+    <div class="flow-arrow">+</div>
+    <div class="flow-box">Incident History<br /><small style="font-weight:400;font-size:10px">past failures,<br />severity levels,<br />recency</small></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-box accent">Failure Prediction<br /><small style="font-weight:400;font-size:10px">p(24h), p(72h),<br />health score,<br />anomaly score</small></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-box red">Composite Risk Score<br /><small style="font-weight:400;font-size:10px">p24 × impact ×<br />weather × criticality<br />× (1−redundancy)<br />→ 0–100</small></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-box">Asset Ranking<br /><small style="font-weight:400;font-size:10px">30 assets, sorted<br />by impact-aware<br />risk score</small></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-box accent">Maintenance Plan<br /><small style="font-weight:400;font-size:10px">priority, action,<br />window, duration</small></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-box green">Crew Dispatch<br /><small style="font-weight:400;font-size:10px">specialty match +<br />haversine distance<br />+ ETA</small></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-box purple">Operator Action<br /><small style="font-weight:400;font-size:10px">Command Center<br />+ AI Advisor</small></div>
+  </div>
+
+  <p><strong>Risk formula (exact implementation from <code>risk_engine.py</code>):</strong></p>
+  <div style="background:#f7f8fa;border:1px solid #e5e7eb;border-radius:6px;padding:12px 14px;font-family:monospace;font-size:12px;margin-bottom:12px">
+    risk_raw = p24<sup>0.35</sup> × impact<sup>0.25</sup> × weather<sup>0.15</sup> × criticality<sup>0.15</sup> × (1−redundancy)<sup>0.10</sup><br />
+    score = risk_raw × 100 × 1.35  [+age boost if &gt;15 years]<br />
+    → normalised 0–100
+  </div>
+  <p>This is a geometric-mean–style product: <strong>every dimension is influential</strong>. An asset with high failure probability but minimal customer exposure ranks below a slightly less likely asset that serves 11,000 customers and 10 critical facilities. That is the core operational insight.</p>
+
+  
+  <h2>3. Actual Values Reference (from running application)</h2>
+  <div class="warn">⚠ These are the real values from the running application screenshots. Use <em>only</em> these numbers in your narration — never round differently or invent alternatives.</div>
+  <table>
+    <tr><th>KPI</th><th>Value</th></tr>
+    <tr><td>Total monitored assets</td><td class="val-blue">30</td></tr>
+    <tr><td>Critical assets</td><td class="val-red">3</td></tr>
+    <tr><td>High-risk assets</td><td class="val-amber">11</td></tr>
+    <tr><td>Customers at risk</td><td class="val-red">90,520</td></tr>
+    <tr><td>Critical facilities at risk</td><td class="val-red">88</td></tr>
+    <tr><td>Crews positioned</td><td class="val-green">8</td></tr>
+  </table>
+  <table>
+    <tr><th>Rank</th><th>Asset</th><th>Risk</th><th>24h Prob</th><th>Customers</th><th>Action</th><th>Crew</th></tr>
+    <tr><td>1</td><td>North Feeder Transformer 1042 (TR-1042)</td><td class="val-red">98 CRITICAL</td><td class="val-red">78%</td><td>8,420</td><td>IMMEDIATE</td><td>CREW-01</td></tr>
+    <tr><td>2</td><td>South Grid Breaker 2201 (BR-2201)</td><td class="val-red">94 CRITICAL</td><td class="val-red">82%</td><td>11,000</td><td>IMMEDIATE</td><td>CREW-08</td></tr>
+    <tr><td>3</td><td>North Substation Breaker 1175 (BR-1175)</td><td class="val-red">79 CRITICAL</td><td class="val-amber">55%</td><td>6,300</td><td>HIGH</td><td>CREW-03</td></tr>
+  </table>
+  <table>
+    <tr><th>TR-1042 Detail</th><th>Value</th></tr>
+    <tr><td>Risk score</td><td class="val-red">98/100</td></tr>
+    <tr><td>Health score</td><td class="val-red">18/100</td></tr>
+    <tr><td>24h failure prob</td><td class="val-red">78%</td></tr>
+    <tr><td>72h failure prob</td><td class="val-red">93%</td></tr>
+    <tr><td>Customers at risk</td><td>8,420</td></tr>
+    <tr><td>Critical facilities</td><td>7</td></tr>
+    <tr><td>Oil temperature</td><td class="val-red">92°C (base; degradation ramp to ~127°C)</td></tr>
+    <tr><td>Vibration</td><td class="val-amber">4.8 mm/s (+60% above threshold)</td></tr>
+    <tr><td>Partial discharge index</td><td class="val-red">0.82</td></tr>
+    <tr><td>Load</td><td class="val-amber">88% rated capacity</td></tr>
+    <tr><td>Age</td><td>17 years</td></tr>
+    <tr><td>Assigned crew</td><td>CREW-01 (Alpha Transformer Team, North)</td></tr>
+  </table>
+  <table>
+    <tr><th>Crew Planner Summary</th><th>Value</th></tr>
+    <tr><td>Total active assignments</td><td>8</td></tr>
+    <tr><td>Dispatched</td><td class="val-red">3</td></tr>
+    <tr><td>Pre-positioned</td><td class="val-amber">5</td></tr>
+    <tr><td>On standby</td><td>0</td></tr>
+    <tr><td>Alpha Transformer Team (CREW-01) → TR-1042</td><td>ETA 1h, Priority #1</td></tr>
+    <tr><td>Theta South Breaker (CREW-08) → BR-2201</td><td>ETA 1h, Priority #2</td></tr>
+    <tr><td>Gamma Breaker Specialists (CREW-03) → BR-1175</td><td>ETA 2h, Priority #3</td></tr>
+  </table>
+  <table>
+    <tr><th>Severe Storm Scenario — top result</th><th>Before → After</th><th>Delta</th></tr>
+    <tr><td>TR-4060 (South Industrial Transformer)</td><td>65 (high) → 84 (critical)</td><td class="val-red">+18.4</td></tr>
+    <tr><td>BR-5511 (West Industrial Breaker)</td><td>66 (high) → 82 (critical)</td><td class="val-red">+15.7</td></tr>
+    <tr><td>FD-3310 (East Industrial Feeder)</td><td>55 (high) → 71 (high)</td><td class="val-amber">+15.6</td></tr>
+  </table>
+
+  
+  <h2>4. The 3–5 Minute Demo Script</h2>
+
+  
+  <div class="scene">
+    <div class="scene-header">
+      <div class="scene-title">Scene 1 — Introduction / Problem Statement</div>
+      <div class="scene-duration">~30 sec · ~85 words</div>
+    </div>
+    <div class="scene-body">
+      <div class="label">Screen</div>
+      <div class="screen-block">Browser open on the Command Center landing screen. The sidebar shows "Bottleneck" branding with "Power Outage Prediction" subtitle. LIVE badge visible in top-right. Do NOT show the terminal or any backend output.</div>
+
+      <div class="label">Action</div>
+      <div class="action-block">Point to the page title "Bottleneck Command Center". Let the KPI cards be visible but don't click anything yet.</div>
+
+      <div class="label">Say</div>
+      <div class="say-block">
+        "Every year, power utilities spend billions responding to equipment failures they could have predicted. The real issue isn't detecting that something is about to fail — it's knowing which failure actually matters. A transformer with 60% failure probability that serves 200 households is less urgent than one at 40% probability that supplies a hospital and 11,000 customers. Bottleneck solves exactly that: it combines asset telemetry, weather exposure, and historical incident data to <em>predict</em> failures, <em>explain</em> why they happen, <em>prioritize</em> them by actual grid impact, and then <em>position</em> field crews before the outage occurs."
+      </div>
+
+      <div class="label">Judge Takeaway</div>
+      <div class="takeaway-block">The problem is not just prediction — it's impact-aware prioritization. This is the U1 challenge framed in real operational terms.</div>
+    </div>
+  </div>
+
+  
+  <div class="scene">
+    <div class="scene-header">
+      <div class="scene-title">Scene 2 — Command Center</div>
+      <div class="scene-duration">~45 sec · ~130 words</div>
+    </div>
+    <div class="scene-body">
+      <div class="label">Screen</div>
+      <div class="screen-block">Command Center page fully loaded. Five KPI cards visible: 3 Critical Assets, 11 High Risk Assets, 90,520 Customers at Risk, 88 Critical Facilities, 8 Crews Positioned. Active Alerts bar with CRITICAL alerts for TR-1042 and BR-2201. Risk Ranking table showing all 30 assets, sorted by risk score.</div>
+
+      <div class="label">Action</div>
+      <div class="action-block">Point to each KPI card as you name it. Then point to the Alerts section and then to the top of the ranking table. Optionally click the "Critical" filter tab to show only the 3 critical assets, then click "All" to restore. Do NOT click into any asset yet.</div>
+
+      <div class="label">Say</div>
+      <div class="say-block">
+        "The Command Center is our operator's single pane of glass. Right now it's monitoring <strong>30 assets</strong> across the grid. Three are in the critical band, eleven more are high-risk. Combined, that's <strong>90,520 customers</strong> and <strong>88 critical facilities</strong> at elevated exposure. The Active Alerts panel surfaces only what needs immediate attention — TR-1042 with a 78% 24-hour failure probability and 7 critical facilities at risk, and BR-2201 with an 82% probability serving 11,000 customers. Scrolling down the Risk Ranking table, each row gives us: the asset name, type, a visual risk bar with its score out of 100, the 24-hour failure probability, the customers affected, the recommended action level, and the assigned crew — all in one row. This is the difference between a monitoring dashboard and a decision dashboard."
+      </div>
+
+      <div class="label">Judge Takeaway</div>
+      <div class="takeaway-block">All three U1 data streams — telemetry, weather, incidents — have been processed into a single ranked, actionable view. Every column in the table has operational meaning.</div>
+    </div>
+  </div>
+
+  
+  <div class="scene">
+    <div class="scene-header">
+      <div class="scene-title">Scene 3 — Asset Intelligence (TR-1042)</div>
+      <div class="scene-duration">~55 sec · ~155 words</div>
+    </div>
+    <div class="scene-body">
+      <div class="label">Screen</div>
+      <div class="screen-block">Click on TR-1042 (row 1) to open Asset Intelligence. This is a full-screen map view with a floating intelligence panel on the right. The map shows the asset location, a red risk zone, and nearby crew depots with dispatch lines. The panel shows: Risk Score 98/100 CRITICAL, Health Score 18/100, 24h failure prob 78%, Customers at risk 8,420, Critical facilities 7, plus a Risk Breakdown section and a "Why Risky" list.</div>
+
+      <div class="label">Action</div>
+      <div class="action-block">Navigate from Command Center by clicking TR-1042 in the ranking table. Once the map loads: (1) point to the red risk zone on the map, (2) point to the Risk Score 98/100 in the panel, (3) scroll the panel to show the Risk Breakdown bars and the "Why Risky" factors. The panel-collapse button can be used to show the full map momentarily if needed.</div>
+
+      <div class="label">Say</div>
+      <div class="say-block">
+        "Clicking any asset takes us to its intelligence view — a map with the asset at center, its risk exclusion zone in red, and the nearest available crews shown with live dispatch lines. For TR-1042, North Feeder Transformer 1042, the risk score is <strong>98 out of 100</strong> with a health score of just <strong>18 out of 100</strong>. That health score is coming from a combination of telemetry signals: oil temperature at 92°C and climbing, vibration at 4.8 mm/s which is 60% above threshold, partial discharge index at 0.82, and the asset running at 88% of rated load. There was a critical overheating incident just 12 days ago. The risk breakdown bars on the right show you exactly which of the five dimensions — failure probability, grid impact, weather exposure, criticality, and lack of redundancy — are driving that 98 score. This is explainable risk: an operator can see the 'why', not just the number."
+      </div>
+
+      <div class="label">Judge Takeaway</div>
+      <div class="takeaway-block">The platform moves from raw telemetry to an explainable, multi-dimensional risk assessment. Five independent risk signals are combined and explained — not just a single probability number.</div>
+    </div>
+  </div>
+
+  
+  <div class="scene">
+    <div class="scene-header">
+      <div class="scene-title">Scene 4 — Maintenance Planner</div>
+      <div class="scene-duration">~35 sec · ~100 words</div>
+    </div>
+    <div class="scene-body">
+      <div class="label">Screen</div>
+      <div class="screen-block">Navigate to "Maintenance" in the sidebar. The Maintenance Planner page loads showing 30 assets. TR-1042 is #1 IMMEDIATE CRITICAL. Shows: "Immediate thermal and vibration inspection + emergency crew dispatch", risk score 98/100, 78% 24h, "Within 6 hours", ~4h estimated, 8,420 customers, 7 facilities at risk, CREW-01 assigned. BR-2201 is #2 IMMEDIATE CRITICAL below it.</div>
+
+      <div class="label">Action</div>
+      <div class="action-block">Click "Maintenance" in the nav. Let the page load. Point to the #1 IMMEDIATE badge on TR-1042. Point to the "Within 6 hours" window and the customer/facility count at the bottom of the card.</div>
+
+      <div class="label">Say</div>
+      <div class="say-block">
+        "The Maintenance Planner converts every risk assessment into a concrete, prioritized action. TR-1042 is Priority 1 Immediate: the system recommends immediate thermal and vibration inspection with emergency crew dispatch, to be completed within 6 hours. It tells you estimated duration — 4 hours — how many customers are at risk — 8,420 — how many facilities — 7 — and which crew is already assigned: CREW-01. Bottleneck doesn't stop at predicting failure. It turns the prediction into a prioritized operational action with a deadline, resource assignment, and clear consequence if it's deferred."
+      </div>
+
+      <div class="label">Judge Takeaway</div>
+      <div class="takeaway-block">Prediction alone is not enough. This demonstrates the full U1 pipeline: predict → explain → prioritize into an actionable maintenance order, ranked by operational impact.</div>
+    </div>
+  </div>
+
+  
+  <div class="scene">
+    <div class="scene-header">
+      <div class="scene-title">Scene 5 — Crew Pre-Positioning Planner</div>
+      <div class="scene-duration">~35 sec · ~95 words</div>
+    </div>
+    <div class="scene-body">
+      <div class="label">Screen</div>
+      <div class="screen-block">Navigate to "Crew Planner". Page shows: 8 crews deployed, 3 Dispatched, 5 Pre-Positioned, 0 on standby. Alpha Transformer Team (CREW-01) → TR-1042, DISPATCH CRITICAL, ETA 1h, Priority #1. Theta South Breaker (CREW-08) → BR-2201, DISPATCH CRITICAL, ETA 1h, Priority #2. Gamma Breaker Specialists (CREW-03) → BR-1175, PRE-POSITION CRITICAL, ETA 2h, Priority #3.</div>
+
+      <div class="label">Action</div>
+      <div class="action-block">Click "Crew Planner". Point to the three KPI cards. Then point to the first assignment card showing Alpha Transformer Team → TR-1042 with the ETA badge. Scroll briefly to show the second and third assignments.</div>
+
+      <div class="label">Say</div>
+      <div class="say-block">
+        "The Crew Pre-Positioning Planner shows the system has already determined that 8 field crews need to move — 3 dispatched immediately, 5 pre-positioned before conditions worsen. CREW-01, the Alpha Transformer Team, which is a transformer specialist based in the North region, is dispatched to TR-1042 with an ETA of 1 hour. That match is not random: the assignment engine prioritizes specialty match — transformer specialists for transformer failures — then ranks by haversine distance. CREW-08, Theta South Breaker, goes to BR-2201 also with a 1-hour ETA. This is proactive crew deployment, not reactive dispatch after a failure call."
+      </div>
+
+      <div class="label">Judge Takeaway</div>
+      <div class="takeaway-block">Directly addresses the U1 "crew pre-positioning" requirement. The system assigns the right specialist to the right asset before the outage, calculated by specialty match + distance + ETA.</div>
+    </div>
+  </div>
+
+  
+  <div class="scene">
+    <div class="scene-header">
+      <div class="scene-title">Scene 6 — Scenario Simulator (Severe Storm)</div>
+      <div class="scene-duration">~35 sec · ~95 words</div>
+    </div>
+    <div class="scene-body">
+      <div class="label">Screen</div>
+      <div class="screen-block">Navigate to "Scenarios". Three cards visible: Severe Storm, Heatwave, Asset Degradation. Click "Severe Storm". Results load showing 9 assets affected. Top result: TR-4060 ESCALATED: 65 → 84 (+18.4), high → critical. BR-5511 ESCALATED: 66 → 82 (+15.7). FD-3310: 55 → 71 (+15.6). Each card shows Before/After risk bars and assigned crew badge.</div>
+
+      <div class="label">Action</div>
+      <div class="action-block">Navigate to Scenarios. Click the "Severe Storm" card. Wait for results to load. Point to the "ESCALATED" badge on TR-4060, then to the before/after bars (65 → 84), then to the assigned crew badge (CREW-02).</div>
+
+      <div class="label">Say</div>
+      <div class="say-block">
+        "The Scenario Simulator answers 'what if' questions. I click Severe Storm — a scenario that increases weather exposure, wind, precipitation, and storm severity across all degraded assets. The system recomputes the full risk ranking in real time. TR-4060, South Industrial Transformer, jumps from risk score 65 — high — to 84 — critical — a gain of 18 points. BR-5511 escalates from high to critical. Two assets that were manageable 10 minutes ago are now emergencies. The system immediately shows crew assignments for the new priorities. This is the shift from 'what is risky now' to 'what becomes risky if conditions worsen.'"
+      </div>
+
+      <div class="label">Judge Takeaway</div>
+      <div class="takeaway-block">Weather is not just a static input — it is a dynamic risk multiplier. Operators can rehearse and pre-position for storm scenarios before they happen.</div>
+    </div>
+  </div>
+
+  
+  <div class="scene">
+    <div class="scene-header">
+      <div class="scene-title">Scene 7 — AI Advisor</div>
+      <div class="scene-duration">~35 sec · ~95 words</div>
+    </div>
+    <div class="scene-body">
+      <div class="label">Screen</div>
+      <div class="screen-block">Navigate to "AI Advisor". The chat interface loads with suggested queries visible, including "Why is TR-1042 critical?" and "Will there be a power outage?" Type and send "Why is TR-1042 critical?". A structured Markdown response appears with a table of metrics and a recommended action.</div>
+
+      <div class="label">Action</div>
+      <div class="action-block">Click the suggested query "Why is TR-1042 critical?" or type it manually. After the response appears, scroll through it briefly to show the structured table. Do NOT claim an LLM is responding unless you have set GEMINI_API_KEY. If using the deterministic fallback, you can still demonstrate naturally — the response format is identical.</div>
+
+      <div class="label">Say</div>
+      <div class="say-block">
+        "The AI Advisor is a grounded operational assistant. I type 'Why is TR-1042 critical?' and the advisor responds with a structured briefing: risk score 98 out of 100, 24-hour failure probability 78%, health score 18 out of 100, 8,420 customers at risk, 7 critical facilities — and then the specific contributing factors: elevated oil temperature, vibration 60% above threshold, sustained overloading at 88% capacity, a critical overheating event 12 days ago, and elevated partial discharge. Every number in this response comes from the backend data layer. The advisor never invents statistics. It ends with a clear recommended action and time window — exactly what an operator needs at 2am during a weather event."
+      </div>
+
+      <div class="label">Judge Takeaway</div>
+      <div class="takeaway-block">The AI is grounded, not generative. It surfaces the same structured data the backend computed — but presented as a natural-language operational briefing, with no hallucinated statistics.</div>
+    </div>
+  </div>
+
+  
+  <div class="scene">
+    <div class="scene-header">
+      <div class="scene-title">Scene 8 — Conclusion</div>
+      <div class="scene-duration">~25 sec · ~65 words</div>
+    </div>
+    <div class="scene-body">
+      <div class="label">Screen</div>
+      <div class="screen-block">Return to Command Center. The ranked table with CREW-01 assigned to TR-1042 should be visible. LIVE badge showing in top right.</div>
+
+      <div class="label">Action</div>
+      <div class="action-block">Navigate back to Command Center. Let the table be visible. Speak to camera.</div>
+
+      <div class="label">Say</div>
+      <div class="say-block">
+        "This is the transformation Bottleneck delivers: from reactive outage response to predictive, explainable, impact-aware grid operations. Asset telemetry, weather data, and incident history — combined into a composite risk score, ranked by actual operational consequence, converted into a maintenance action, with a crew already moving before the failure happens. Predict. Explain. Prioritize. Position. That is Track U1, fully implemented."
+      </div>
+
+      <div class="label">Judge Takeaway</div>
+      <div class="takeaway-block">Clean, memorable U1 alignment. The four-word tagline maps exactly to the challenge requirements.</div>
+    </div>
+  </div>
+
+  
+  <h2>5. Timing Summary</h2>
+  <div class="timing-bar">
+    <div class="tb-seg" style="flex:1;background:#57606a">Intro</div>
+    <div class="tb-seg" style="flex:1.5;background:#dc2626">CC</div>
+    <div class="tb-seg" style="flex:1.8;background:#b91c1c">Intel</div>
+    <div class="tb-seg" style="flex:1.2;background:#d97706">Maint</div>
+    <div class="tb-seg" style="flex:1.2;background:#d97706">Crew</div>
+    <div class="tb-seg" style="flex:1.2;background:#3b82d4">Scen</div>
+    <div class="tb-seg" style="flex:1.2;background:#7c5cd8">AI</div>
+    <div class="tb-seg" style="flex:0.8;background:#15803d">End</div>
+  </div>
+  <table>
+    <tr><th>Scene</th><th>Duration</th><th>Cumulative</th><th>Words</th></tr>
+    <tr><td>1 — Introduction</td><td>~30 sec</td><td>0:30</td><td>~85</td></tr>
+    <tr><td>2 — Command Center</td><td>~45 sec</td><td>1:15</td><td>~130</td></tr>
+    <tr><td>3 — Asset Intelligence</td><td>~55 sec</td><td>2:10</td><td>~155</td></tr>
+    <tr><td>4 — Maintenance Planner</td><td>~35 sec</td><td>2:45</td><td>~100</td></tr>
+    <tr><td>5 — Crew Planner</td><td>~35 sec</td><td>3:20</td><td>~95</td></tr>
+    <tr><td>6 — Scenario Simulator</td><td>~35 sec</td><td>3:55</td><td>~95</td></tr>
+    <tr><td>7 — AI Advisor</td><td>~35 sec</td><td>4:30</td><td>~95</td></tr>
+    <tr><td>8 — Conclusion</td><td>~25 sec</td><td>4:55</td><td>~65</td></tr>
+    <tr><td><strong>Total</strong></td><td><strong>~4m 55s</strong></td><td>—</td><td><strong>~820 words</strong></td></tr>
+  </table>
+
+  <h3 style="margin-top:16px">Fast Version (if running over — target ~3:30)</h3>
+  <ul>
+    <li>Cut Scene 3 (Asset Intelligence) from 55s to 30s — show the map and risk score 98, name 3 top factors, move on</li>
+    <li>Combine Scenes 4 and 5 — briefly show Maintenance Planner, then immediately pivot to Crew Planner in one 40s combined segment</li>
+    <li>In Scenario Simulator, name only TR-4060 (65→84) and cut the second asset</li>
+  </ul>
+
+  
+  <h2>6. IBM Bob Contribution</h2>
+  <p>IBM Bob was the primary development agent for the entire GridShield build. Five documented engineering sessions are in <code>docs/BOB_ENGINEERING_LOG.md</code>.</p>
+
+  <div class="bob-card">
+    <div class="bob-label">Session 1 — Architecture &amp; Audit</div>
+    <p>Bob performed a full audit of the existing Gridkavach repository and produced a migration map — KEEP / MODIFY / REMOVE / CREATE — covering all 30+ files. It designed the ML seam architecture: a stable <code>FailurePrediction</code> contract that decouples the frontend, risk engine, and crew planner from the predictor implementation entirely. This architectural decision is what lets the app always boot regardless of whether the XGBoost models are present.</p>
+  </div>
+  <div class="bob-card">
+    <div class="bob-label">Sessions 2–3 — Full Backend Implementation</div>
+    <p>Bob implemented every backend module from scratch: <code>contracts.py</code> (Pydantic schemas), <code>mock_data.py</code> (30-asset synthetic fleet with realistic degradation profiles), <code>ml_adapter.py</code> (MockFailurePredictor + ScenarioFailurePredictor with modifiers), <code>risk_engine.py</code> (the composite risk formula), <code>grid_impact.py</code> (downstream impact model), <code>weather_adapter.py</code>, <code>service.py</code> (orchestrator with TTL ranking cache), <code>copilot.py</code> (intent detection + deterministic fallback advisor), and all 16+ API endpoints in <code>routes.py</code>. TR-1042 was specified as risk=100 and confirmed correct after implementation.</p>
+  </div>
+  <div class="bob-card">
+    <div class="bob-label">Session 4 — Full React/TypeScript Frontend</div>
+    <p>Bob built the complete React/TypeScript SPA: the TypeScript API client, Command Center dashboard with KPI cards and ranked table, Asset Intelligence map-overlay page (full-screen map + floating panel + crew dispatch), Maintenance Planner with filter dropdowns, Crew Planner assignment table, Scenario Simulator before/after comparison cards, and the AI Copilot chat interface with session persistence via localStorage. All components use the existing CSS design system without introducing new dependencies.</p>
+  </div>
+  <div class="bob-card">
+    <div class="bob-label">Session 5 — Tests &amp; Validation</div>
+    <p>Bob wrote 44 automated tests covering the risk engine, mock ML predictions, maintenance logic, crew assignment, and all API endpoints. All 44 pass. Bob also ran the frontend TypeScript build to confirm zero type errors, and wrote the complete documentation suite: <code>submission.yaml</code>, <code>docs/architecture.md</code>, <code>docs/setup-guide.md</code>, and the CI validation workflow.</p>
+  </div>
+  <p style="font-size:13px;color:#57606a;margin-top:8px">How to mention this naturally in the video: <em>"Bob wasn't a tool we used once to scaffold a project. It ran five engineering sessions — audit, backend implementation, frontend build, testing, and documentation — and the engineering log in <code>docs/BOB_ENGINEERING_LOG.md</code> is the record of that work."</em></p>
+
+  
+  <h2>7. Top 3 Differentiators</h2>
+
+  <div class="diff-card">
+    <div style="display:flex;align-items:baseline;gap:0;margin-bottom:6px">
+      <span class="diff-num">1</span>
+      <span class="diff-title">Impact-Aware Risk Scoring — Not Just Probability</span>
+    </div>
+    <p style="font-size:13px">The composite formula combines five independent dimensions: failure probability, grid impact (customers + facilities + downstream assets + capacity), weather exposure, criticality, and redundancy. A 40%-probability asset serving 11,000 customers ranks ahead of an 80%-probability asset serving 200. This is the central operational insight: <strong>consequence × probability, not just probability</strong>.</p>
+  </div>
+
+  <div class="diff-card">
+    <div style="display:flex;align-items:baseline;gap:0;margin-bottom:6px">
+      <span class="diff-num">2</span>
+      <span class="diff-title">Explainable Risk with Deterministic, Reproducible Behavior</span>
+    </div>
+    <p style="font-size:13px">Every risk score has a named breakdown: which of the five dimensions drove it and why. The "Why Risky" factors trace back to specific telemetry signals (oil temp, vibration, partial discharge), incident recency, and weather conditions. Because the predictor uses a stable <code>FailurePrediction</code> contract and a deterministic mock, every demo run produces identical, verifiable numbers — no randomness, no hallucination, no "it works on my machine" instability.</p>
+  </div>
+
+  <div class="diff-card">
+    <div style="display:flex;align-items:baseline;gap:0;margin-bottom:6px">
+      <span class="diff-num">3</span>
+      <span class="diff-title">End-to-End Operational Pipeline — Predict to Crew Dispatch in One Application</span>
+    </div>
+    <p style="font-size:13px">Most grid monitoring tools stop at detection. GridShield continues through maintenance planning (specific action, time window, duration) and crew pre-positioning (specialty match, haversine distance, ETA calculation) — all in one application, all driven by the same risk ranking. The scenario simulator extends this to future conditions. The AI advisor makes all of it accessible via natural language. This is a complete operational decision-support system, not a dashboard.</p>
+  </div>
+
+  
+  <h2>8. Recording Checklist</h2>
+
+  <h3 style="margin-bottom:10px">Page Navigation Order</h3>
+  <ol style="font-size:13px">
+    <li>Application already open at <strong>Command Center</strong> — LIVE badge visible, KPIs loaded</li>
+    <li>Speak intro while on Command Center</li>
+    <li>Point to KPIs and Alerts, then risk ranking table</li>
+    <li>Click <strong>TR-1042</strong> (row 1) → Asset Intelligence map loads</li>
+    <li>Point to map risk zone, panel risk score, breakdown bars, "Why Risky" factors</li>
+    <li>Click <strong>Maintenance</strong> in sidebar</li>
+    <li>Point to #1 IMMEDIATE TR-1042 card — within 6 hours, CREW-01</li>
+    <li>Click <strong>Crew Planner</strong> in sidebar</li>
+    <li>Point to 3 Dispatched / 5 Pre-Positioned / Alpha → TR-1042 / Theta → BR-2201</li>
+    <li>Click <strong>Scenarios</strong> in sidebar → click <strong>Severe Storm</strong> card</li>
+    <li>Wait for results → point to TR-4060 ESCALATED 65→84</li>
+    <li>Click <strong>AI Advisor</strong> in sidebar</li>
+    <li>Click or type <strong>"Why is TR-1042 critical?"</strong></li>
+    <li>Scroll the response briefly, point to the metrics table</li>
+    <li>Return to <strong>Command Center</strong> for conclusion</li>
+  </ol>
+
+  <h3 style="margin-top:18px;margin-bottom:10px">What to Verify Before Recording</h3>
+  <ul class="checklist">
+    <li><div class="chk"></div>Application is fully loaded — no "Loading grid status…" spinner visible</li>
+    <li><div class="chk"></div>LIVE badge shows in top-right of Command Center</li>
+    <li><div class="chk"></div>KPIs show: 3 Critical, 11 High, 90,520 Customers, 88 Facilities, 8 Crews</li>
+    <li><div class="chk"></div>TR-1042 is rank #1 with risk score 98 and CREW-01 assigned</li>
+    <li><div class="chk"></div>BR-2201 is rank #2 with risk score 94</li>
+    <li><div class="chk"></div>Terminal/backend output NOT visible in any screen</li>
+    <li><div class="chk"></div>No .env file, no API keys, no secrets visible anywhere in the browser</li>
+    <li><div class="chk"></div>Browser address bar shows localhost:5173 (or :8000) — not a terminal URL</li>
+    <li><div class="chk"></div>Scenario Simulator: Severe Storm result shows TR-4060 ESCALATED 65→84</li>
+    <li><div class="chk"></div>AI Advisor chat interface loads with 6 suggested queries visible</li>
+    <li><div class="chk"></div>Crew Planner shows 8 crews deployed, 3 dispatched, 5 pre-positioned</li>
+    <li><div class="chk"></div>No broken/error pages on any tab</li>
+    <li><div class="chk"></div>IBM Bob Hackathon 2026 · Track U1 label visible in sidebar footer</li>
+  </ul>
+
+  <h3 style="margin-top:18px;margin-bottom:10px">What NOT to Show</h3>
+  <ul style="font-size:13px">
+    <li>Terminal windows with <code>uvicorn</code> or <code>npm</code> output</li>
+    <li>Any <code>.env</code> file or environment variable screen</li>
+    <li>Settings page (hardware integration) — not needed for demo flow</li>
+    <li>The Grid Map page — not in the core demo path (saves ~45s)</li>
+    <li>The "All Crews" tab in Crew Planner — not needed</li>
+    <li>Any error state or retry button</li>
+  </ul>
+
+  <h3 style="margin-top:18px;margin-bottom:10px">Common Mistakes to Avoid</h3>
+  <ul style="font-size:13px">
+    <li><strong>Don't say "XGBoost is running"</strong> unless you have explicitly set <code>GRIDSHIELD_USE_REAL_ML=1</code> and confirmed the models loaded (the ML badge in the top-right of Command Center will show "ML: XGBoost" vs "ML: Mock")</li>
+    <li><strong>Don't say "Gemini is responding"</strong> unless you have a live <code>GEMINI_API_KEY</code> set — the response format is identical either way, so just describe it as "the AI Advisor"</li>
+    <li>Don't read numbers from the screen without explaining their operational significance</li>
+    <li>Don't click into Settings — it will consume time without adding demo value</li>
+    <li>Don't scroll the full 30-row ranking table — filter to "Critical" briefly then back to "All"</li>
+  </ul>
+
+  
+  <div class="conclusion">
+    The 20-Second Closing Statement
+    <hr style="border-color:#374151;margin:10px 0" />
+    "Bottleneck transforms power grid operations from reactive to predictive. Three data streams — asset telemetry, weather exposure, incident history — converge into one explainable, impact-aware risk ranking that drives a maintenance plan and pre-positions crews before the lights go out. PREDICT. EXPLAIN. PRIORITIZE. POSITION. Track U1, delivered."
+    <div class="sub">~65 words · ~22 seconds at normal speaking pace</div>
+  </div>
+
+  
+  <h2>9. Final 5 Judge Takeaways</h2>
+  <ol class="takeaway-list">
+    <li><strong>Impact-aware, not probability-only.</strong> The composite risk formula multiplies failure probability by grid impact (customers, facilities, downstream assets), weather, criticality, and redundancy — so the asset that matters most to the grid ranks first, not merely the one most likely to fail.</li>
+    <li><strong>Explainable at every step.</strong> Every risk score has named contributing factors traceable to specific telemetry signals and incident history. An operator can see exactly why TR-1042 scores 98 — 5 specific reasons, all backed by real data.</li>
+    <li><strong>Complete U1 pipeline in one application.</strong> Predict (XGBoost / deterministic mock) → rank → maintenance action with time window → crew dispatch with specialty match and ETA. The platform closes the loop from data to operator action.</li>
+    <li><strong>Weather-as-risk-multiplier with scenario simulation.</strong> Weather is not decorative — it is a live input to the risk score and a scenario dimension. The Severe Storm simulator shows that TR-4060 escalates from "high" to "critical" (+18.4 points), changing crew priority before a storm even arrives.</li>
+    <li><strong>Built with IBM Bob as engineering partner throughout.</strong> Five documented sessions from repository audit through architecture, full backend, complete frontend, 44-test suite, and documentation — with the engineering log available in the repository for judges to review.</li>
+  </ol>
+
+  
+  <div class="footer">
+    Made with IBM Bob  ·  IBM Bob Hackathon 2026 · Team bottleneck · Track U1
+  </div>
+
+</div>
+</body>
+</html>

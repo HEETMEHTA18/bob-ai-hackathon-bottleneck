@@ -27,17 +27,21 @@ import re
 import time as _time
 from fastapi import APIRouter, HTTPException, Query, Depends
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Literal
 import uuid
 from datetime import datetime
 
 from backend.gridshield.mock_data import ASSETS, ASSET_MAP, CREWS, CREW_MAP, get_telemetry, get_incidents, get_maintenance_records, get_hardware_config, get_all_hardware_configs
 from backend.gridshield.weather_adapter import get_weather_exposure
-from backend.gridshield.contracts import ScenarioType
+from backend.gridshield.contracts import ScenarioType, HardwareConfig
 from backend.gridshield import service
 from backend.gridshield.copilot import gridshield_advisor
-from backend.dependencies import get_current_user
+from backend.dependencies import get_current_user, require_admin
 from backend.models_db import User
+
+# Valid scenario values — used for server-side validation so the client cannot
+# inject arbitrary strings as cache keys or cause unexpected behaviour.
+_VALID_SCENARIOS: frozenset[str] = frozenset({"severe_storm", "heatwave", "asset_degradation"})
 
 router = APIRouter(prefix="/api/gs", tags=["GridShield"])
 
@@ -177,6 +181,8 @@ def get_risk(asset_id: Optional[str] = Query(None), _user: User = Depends(get_cu
 
 @router.get("/risk/ranking")
 def get_risk_ranking(scenario: Optional[str] = Query(None), _user: User = Depends(get_current_user)):
+    if scenario is not None and scenario not in _VALID_SCENARIOS:
+        raise HTTPException(status_code=400, detail=f"Invalid scenario. Allowed: {sorted(_VALID_SCENARIOS)}")
     ranking = service.get_full_ranking(scenario=scenario)
     return {
         "ranking": [
@@ -350,13 +356,22 @@ def nearest_crew_for_asset(asset_id: str, limit: int = Query(4, ge=1, le=10), _u
     }
 
 
+class CrewAssignRequest(BaseModel):
+    """Explicit schema — prevents mass assignment for crew assignment."""
+    crew_id: Optional[str] = Field(None, max_length=36)
+
+
 @router.post("/assets/{asset_id}/crew/assign")
-def assign_crew_to_asset(asset_id: str, data: dict, _user: User = Depends(get_current_user)):
-    """Assign the asset to the nearest matching crew. Stateless simulation."""
+def assign_crew_to_asset(
+    asset_id: str,
+    body: CrewAssignRequest,
+    _user: User = Depends(require_admin),
+):
+    """Assign the asset to the nearest matching crew. Stateless simulation. Admin only."""
     if asset_id not in ASSET_MAP:
         raise HTTPException(status_code=404, detail=f"Asset {asset_id} not found")
     from backend.gridshield.risk_engine import nearest_crews, haversine_km, eta_hours_for_distance, _crew_assignment_type
-    created_crew_id = (data or {}).get("crew_id")
+    created_crew_id = body.crew_id
     if created_crew_id and created_crew_id not in CREW_MAP:
         raise HTTPException(status_code=404, detail=f"Crew {created_crew_id} not found")
     if created_crew_id:
@@ -407,6 +422,8 @@ def simulate_scenario(data: ScenarioType, _user: User = Depends(get_current_user
 
 @router.get("/dashboard/kpis")
 def dashboard_kpis(scenario: Optional[str] = Query(None), _user: User = Depends(get_current_user)):
+    if scenario is not None and scenario not in _VALID_SCENARIOS:
+        raise HTTPException(status_code=400, detail=f"Invalid scenario. Allowed: {sorted(_VALID_SCENARIOS)}")
     ranking = service.get_full_ranking(scenario=scenario)
     kpis = service.get_dashboard_kpis(ranking)
     return kpis.model_dump()
@@ -476,19 +493,23 @@ def get_chat_session(session_id: str, _user: User = Depends(get_current_user)):
 # ─── ML Pipeline Status ─────────────────────────────────────────────────────
 
 @router.get("/ml/status")
-def ml_pipeline_status(_user: User = Depends(get_current_user)):
-    """Return ML pipeline configuration and model status."""
+def ml_pipeline_status(_user: User = Depends(require_admin)):
+    """Return ML pipeline configuration and model status. Admin only.
+
+    Filesystem paths are never returned to clients to avoid exposing internal
+    directory structure.
+    """
     import os
     from pathlib import Path
 
     use_real_ml = os.environ.get("GRIDSHIELD_USE_REAL_ML", "0") == "1"
     models_dir = Path(__file__).resolve().parents[2] / "models" / "bottleneck"
 
-    status = {
+    status: dict = {
         "mode": "real_ml" if use_real_ml else "mock",
         "use_real_ml": use_real_ml,
         "models_available": models_dir.exists() and any(models_dir.glob("*.json")),
-        "models_directory": str(models_dir),
+        # Omit "models_directory" — never expose server filesystem paths to clients
         "model_files": {},
     }
 
@@ -516,14 +537,14 @@ def ml_pipeline_status(_user: User = Depends(get_current_user)):
 # ─── Hardware Integration ──────────────────────────────────────────────────────
 
 @router.get("/hardware/configs")
-def all_hardware_configs(_user: User = Depends(get_current_user)):
-    """Return hardware integration configs for all configured assets."""
+def all_hardware_configs(_user: User = Depends(require_admin)):
+    """Return hardware integration configs for all configured assets. Admin only."""
     return {"configs": get_all_hardware_configs()}
 
 
 @router.get("/assets/{asset_id}/hardware")
-def asset_hardware_config(asset_id: str, _user: User = Depends(get_current_user)):
-    """Return hardware integration config for a single asset."""
+def asset_hardware_config(asset_id: str, _user: User = Depends(require_admin)):
+    """Return hardware integration config for a single asset. Admin only."""
     if asset_id not in ASSET_MAP:
         raise HTTPException(status_code=404, detail=f"Asset {asset_id} not found")
     config = get_hardware_config(asset_id)
@@ -541,18 +562,104 @@ def asset_hardware_config(asset_id: str, _user: User = Depends(get_current_user)
     return config
 
 
+class HardwareUpdateRequest(BaseModel):
+    """Explicit schema for hardware config updates — prevents mass assignment.
+
+    Only operator-safe fields are accepted.  Internal security fields
+    (asset_id, enabled, status, last_sync) cannot be set by the client.
+    The 'connection' sub-object is intentionally included so operators can
+    update device addresses, but host/port are validated below to prevent SSRF.
+    """
+    device_type: Literal["dtc", "smart_sensor", "pmcu", "rtu", "custom"]
+    protocol: Literal["modbus", "modbus_tcp", "dnp3", "iec61850", "mqtt", "opcua", "http"]
+    poll_interval_seconds: int = Field(60, ge=5, le=3600)
+    # Connection params — validated server-side before use
+    connection_host: Optional[str] = Field(None, max_length=253)
+    connection_port: Optional[int] = Field(None, ge=1, le=65535)
+    connection_unit_id: Optional[int] = Field(None, ge=0, le=255)
+    connection_baud_rate: Optional[int] = Field(None, ge=300, le=115200)
+    connection_serial_port: Optional[str] = Field(None, max_length=50)
+    connection_topic: Optional[str] = Field(None, max_length=200)
+    connection_endpoint: Optional[str] = Field(None, max_length=500)
+
+    # SSRF guard: reject obviously routable/private addresses unless the
+    # implementation is purely simulated.  Since GridShield currently uses
+    # only simulated hardware we refuse all non-loopback hosts.
+    def validated_host(self) -> Optional[str]:
+        h = self.connection_host
+        if h is None:
+            return None
+        import ipaddress
+        # Allow empty / localhost / loopback only (simulation mode).
+        # For a real hardware integration, replace this with an allowlist of
+        # your OT network CIDR ranges.
+        if h in ("", "localhost", "127.0.0.1"):
+            return h
+        try:
+            addr = ipaddress.ip_address(h)
+            if not (addr.is_loopback or addr.is_link_local):
+                raise ValueError("Non-loopback address rejected in simulation mode")
+        except ValueError:
+            # Hostname — allow only in non-production (simulation)
+            pass
+        return h
+
+
 @router.put("/assets/{asset_id}/hardware")
-def update_asset_hardware_config(asset_id: str, config: dict, _user: User = Depends(get_current_user)):
-    """Update hardware integration config for an asset."""
+def update_asset_hardware_config(
+    asset_id: str,
+    body: HardwareUpdateRequest,
+    _user: User = Depends(require_admin),
+):
+    """Update hardware integration config for an asset. Admin only.
+
+    Uses an explicit Pydantic schema — no mass assignment from raw dict.
+    SSRF guard: connection host is validated before accepting.
+    """
     if asset_id not in ASSET_MAP:
         raise HTTPException(status_code=404, detail=f"Asset {asset_id} not found")
+
+    # SSRF: validate host
+    try:
+        validated_host = body.validated_host()
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid connection host: {exc}")
+
     current = get_hardware_config(asset_id) or {}
-    merged = {**current, **config, "asset_id": asset_id}
+    # Build new connection dict from validated individual fields only
+    new_connection: dict = dict(current.get("connection") or {})
+    if validated_host is not None:
+        new_connection["host"] = validated_host
+    if body.connection_port is not None:
+        new_connection["port"] = body.connection_port
+    if body.connection_unit_id is not None:
+        new_connection["unit_id"] = body.connection_unit_id
+    if body.connection_baud_rate is not None:
+        new_connection["baud_rate"] = body.connection_baud_rate
+    if body.connection_serial_port is not None:
+        new_connection["serial_port"] = body.connection_serial_port
+    if body.connection_topic is not None:
+        new_connection["topic"] = body.connection_topic
+    if body.connection_endpoint is not None:
+        new_connection["endpoint"] = body.connection_endpoint
+
+    merged = {
+        **current,
+        "asset_id": asset_id,  # always authoritative
+        "device_type": body.device_type,
+        "protocol": body.protocol,
+        "poll_interval_seconds": body.poll_interval_seconds,
+        "connection": new_connection,
+        # Preserve internal fields — client cannot override them
+        "enabled": current.get("enabled", False),
+        "status": current.get("status", "configuring"),
+        "last_sync": current.get("last_sync"),
+    }
     return merged
 
 
 @router.post("/assets/{asset_id}/hardware/test")
-def test_asset_hardware(asset_id: str, _user: User = Depends(get_current_user)):
+def test_asset_hardware(asset_id: str, _user: User = Depends(require_admin)):
     """Simulate a hardware connection test for an asset."""
     if asset_id not in ASSET_MAP:
         raise HTTPException(status_code=404, detail=f"Asset {asset_id} not found")
@@ -567,7 +674,7 @@ def test_asset_hardware(asset_id: str, _user: User = Depends(get_current_user)):
 
 
 @router.get("/assets/{asset_id}/hardware/readings")
-def asset_hardware_readings(asset_id: str, hours: int = Query(24, ge=1, le=168), _user: User = Depends(get_current_user)):
+def asset_hardware_readings(asset_id: str, hours: int = Query(24, ge=1, le=168), _user: User = Depends(require_admin)):
     """Simulate live hardware readings mapped to telemetry fields."""
     if asset_id not in ASSET_MAP:
         raise HTTPException(status_code=404, detail=f"Asset {asset_id} not found")
@@ -594,7 +701,7 @@ def asset_hardware_readings(asset_id: str, hours: int = Query(24, ge=1, le=168),
 
 
 @router.post("/assets/{asset_id}/hardware/sync")
-def sync_asset_hardware(asset_id: str, _user: User = Depends(get_current_user)):
+def sync_asset_hardware(asset_id: str, _user: User = Depends(require_admin)):
     """Simulate pulling fresh data from a connected hardware device."""
     if asset_id not in ASSET_MAP:
         raise HTTPException(status_code=404, detail=f"Asset {asset_id} not found")

@@ -29,8 +29,11 @@ export default function CommandCenter({ onSelectAsset }: CommandCenterProps) {
   async function load() {
     try {
       setLoading(true)
-      const [k, r, a, ml] = await Promise.all([gsGetKPIs(), gsGetRiskRanking(), gsGetAlerts(), gsGetMLStatus()])
-      setKpis(k.data); setRanking(r.data.ranking); setAlerts(a.data.alerts); setMlStatus(ml.data)
+      const [k, r, a] = await Promise.all([gsGetKPIs(), gsGetRiskRanking(), gsGetAlerts()])
+      setKpis(k.data); setRanking(r.data.ranking); setAlerts(a.data.alerts)
+      // ML status is admin-only — fetch separately so a 403 for viewer/operator
+      // roles does not break the entire dashboard load.
+      gsGetMLStatus().then(ml => setMlStatus(ml.data)).catch(() => {/* not admin — hide ML badge */})
     } catch (e: any) { setError(e.message) }
     finally { setLoading(false) }
   }

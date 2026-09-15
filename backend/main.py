@@ -13,16 +13,12 @@ from backend.routes import api_router
 from backend.websocket import websocket_endpoint
 from backend.services.live_poller import poller
 from backend.services.batch_processor import batch_processor
-from backend.config import CORS_ORIGINS, RATE_LIMIT_PER_MINUTE
+from backend.config import CORS_ORIGINS, RATE_LIMIT_PER_MINUTE, AUTH_RATE_LIMIT_PER_MINUTE
 
-# Load .env file
-_env_path = Path(__file__).parent.parent / ".env"
-if _env_path.exists():
-    for line in _env_path.read_text().splitlines():
-        line = line.strip()
-        if line and not line.startswith("#") and "=" in line:
-            k, v = line.split("=", 1)
-            os.environ.setdefault(k.strip(), v.strip())
+# NOTE: .env is loaded by backend/config.py via python-dotenv.
+# Do NOT re-read the .env file here — that would let the raw file content
+# (including secrets) flow through os.environ.setdefault calls in this
+# process, creating a secondary load path that is harder to audit.
 
 FRONTEND_DIST = Path(__file__).parent.parent / "frontend" / "dist"
 
@@ -73,7 +69,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Security headers: CSP-safe baseline for the SPA
+# Security headers — hardened CSP that works with a compiled React SPA.
+# React (Vite production build) is pure static JS with no eval() or inline
+# scripts in the output — unsafe-eval and unsafe-inline are NOT needed for the
+# compiled app.  They are removed here.
+# If a future feature genuinely requires them, document the justification.
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
     response = await call_next(request)
@@ -84,41 +84,78 @@ async def security_headers(request: Request, call_next):
     response.headers["Cache-Control"] = "no-store"
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
-        "style-src 'self' 'unsafe-inline'; "
+        "script-src 'self'; "
+        "style-src 'self' 'unsafe-inline'; "   # Tailwind injects inline styles at runtime
         "img-src 'self' data: https:; "
         "font-src 'self' data:; "
-        "connect-src 'self' http://localhost:8000 http://localhost:5173; "
+        "connect-src 'self' ws://localhost:8000 wss://localhost:8000 "
+        "http://localhost:8000 http://localhost:5173; "
         "frame-ancestors 'none'"
     )
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     response.headers.setdefault("Server", "GridShield")
     return response
 
-# Rate limiting: simple in-memory token bucket per IP
+
+# ─── Rate limiting ─────────────────────────────────────────────────────────────
+# Per-IP sliding-window buckets.  Auth endpoints use a much stricter limit to
+# mitigate brute-force attacks.  WebSocket connections must authenticate via
+# token before the WS upgrade, so the HTTP rate limit covers them too.
+
 _rate_buckets: dict[str, list[float]] = defaultdict(list)
+_auth_buckets: dict[str, list[float]] = defaultdict(list)
+
+# Auth endpoints that require the stricter per-minute limit
+_AUTH_PATHS = {"/auth/login", "/auth/signup", "/auth/refresh"}
+
+
+def _get_real_ip(request: Request) -> str:
+    """Return client IP, honouring X-Forwarded-For only when a trusted proxy
+    is configured (TRUSTED_PROXY env var set to the proxy's IP).  Otherwise
+    fall back to the direct connection address to prevent IP spoofing."""
+    trusted_proxy = os.environ.get("TRUSTED_PROXY", "").strip()
+    if trusted_proxy and request.client and request.client.host == trusted_proxy:
+        forwarded_for = request.headers.get("x-forwarded-for", "")
+        if forwarded_for:
+            # Take the leftmost (original client) address
+            return forwarded_for.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
 
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
-    client_ip = request.client.host if request.client else "unknown"
+    client_ip = _get_real_ip(request)
     now = _time.time()
     window = 60.0
+    path = request.url.path
 
-    # Clean old entries
+    # Auth endpoints: strict bucket
+    if path in _AUTH_PATHS:
+        _auth_buckets[client_ip] = [t for t in _auth_buckets[client_ip] if now - t < window]
+        if len(_auth_buckets[client_ip]) >= AUTH_RATE_LIMIT_PER_MINUTE:
+            remaining_secs = int(window - (now - _auth_buckets[client_ip][0]))
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "Too many authentication attempts. Try again later."},
+                headers={"Retry-After": str(remaining_secs)},
+            )
+        _auth_buckets[client_ip].append(now)
+
+    # General request bucket
     _rate_buckets[client_ip] = [t for t in _rate_buckets[client_ip] if now - t < window]
-
     if len(_rate_buckets[client_ip]) >= RATE_LIMIT_PER_MINUTE:
+        remaining_secs = int(window - (now - _rate_buckets[client_ip][0]))
         return JSONResponse(
             status_code=429,
             content={"detail": "Rate limit exceeded. Try again later."},
-            headers={"Retry-After": str(int(window - (now - _rate_buckets[client_ip][0])))},
+            headers={"Retry-After": str(remaining_secs)},
         )
-
     _rate_buckets[client_ip].append(now)
     response = await call_next(request)
     response.headers["X-RateLimit-Limit"] = str(RATE_LIMIT_PER_MINUTE)
     response.headers["X-RateLimit-Remaining"] = str(max(0, RATE_LIMIT_PER_MINUTE - len(_rate_buckets[client_ip])))
     return response
+
 
 # Request ID + latency tracing for observability
 @app.middleware("http")
@@ -136,7 +173,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "DELETE"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["Authorization", "Content-Type"],
 )
 
@@ -148,6 +185,8 @@ app.include_router(gridshield_router)
 
 @app.websocket("/ws/{site_id}")
 async def ws_endpoint(websocket: WebSocket, site_id: str, token: str = Query(...)):
+    # Token authentication is enforced inside websocket_endpoint before the
+    # connection is accepted — the HTTP rate-limit middleware already ran.
     await websocket_endpoint(websocket, token, site_id)
 
 @app.get("/health")
@@ -163,7 +202,20 @@ if FRONTEND_DIST.exists():
         if full_path.startswith("ws/"):
             from fastapi import HTTPException
             raise HTTPException(status_code=400, detail="WebSocket endpoint — use ws:// protocol")
-        file_path = FRONTEND_DIST / full_path
-        if file_path.exists() and file_path.is_file():
-            return FileResponse(file_path)
+
+        # ── Path-traversal guard ──────────────────────────────────────────────
+        # Resolve to an absolute path and confirm it stays within FRONTEND_DIST.
+        try:
+            resolved = (FRONTEND_DIST / full_path).resolve()
+        except Exception:
+            return FileResponse(FRONTEND_DIST / "index.html")
+
+        # Reject any path that escapes the frontend dist directory.
+        try:
+            resolved.relative_to(FRONTEND_DIST.resolve())
+        except ValueError:
+            return FileResponse(FRONTEND_DIST / "index.html")
+
+        if resolved.exists() and resolved.is_file():
+            return FileResponse(resolved)
         return FileResponse(FRONTEND_DIST / "index.html")
