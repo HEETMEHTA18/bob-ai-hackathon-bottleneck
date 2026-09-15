@@ -43,8 +43,13 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
-async def verify_ws_token(token: str) -> str:
-    """Validate WebSocket token with full security checks."""
+async def verify_ws_token(token: str, site_id: str) -> str | None:
+    """Validate WebSocket token and site ownership.
+
+    Returns the user_id on success, or None if authentication/authorization
+    fails.  site_id ownership is verified against the DB so users cannot
+    subscribe to arbitrary sites.
+    """
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     except JWTError:
@@ -58,15 +63,26 @@ async def verify_ws_token(token: str) -> str:
     if not user_id:
         return None
 
-    # Verify user exists and is active
+    # Verify user exists, is active, and owns (or is admin for) the site.
     try:
         from backend.database import get_db
-        from backend.models_db import User
+        from backend.models_db import User, Site
         from sqlalchemy import select
         async for db in get_db():
             result = await db.execute(select(User).where(User.id == user_id, User.is_active == True))
             user = result.scalar_one_or_none()
             if not user:
+                return None
+
+            # Admin users may subscribe to any site.
+            if user.role == "admin":
+                break
+
+            # Non-admin: site must exist and belong to this user.
+            site_result = await db.execute(
+                select(Site).where(Site.id == site_id, Site.owner_id == user_id, Site.is_active == True)
+            )
+            if not site_result.scalar_one_or_none():
                 return None
             break
     except Exception:
@@ -75,9 +91,9 @@ async def verify_ws_token(token: str) -> str:
     return user_id
 
 async def websocket_endpoint(websocket: WebSocket, token: str, site_id: str):
-    user_id = await verify_ws_token(token)
+    user_id = await verify_ws_token(token, site_id)
     if not user_id:
-        await websocket.close(code=4001, reason="Invalid or expired token")
+        await websocket.close(code=4001, reason="Unauthorized")
         return
 
     await manager.connect(websocket, user_id, site_id)

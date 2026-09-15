@@ -641,10 +641,11 @@ function HardwareTab() {
 
 function EnvironmentTab() {
   const envVars = [
-    { key: 'SECRET_KEY',                required: false, default: 'dev-fallback',  description: 'JWT signing key. Always set a strong secret in production.' },
+    { key: 'SECRET_KEY',                required: true,  default: '(required in production)', description: 'JWT signing key. Must be a strong random value. Required when APP_ENV is not "development".' },
+    { key: 'APP_ENV',                   required: false, default: 'production',    description: '"development" enables a dev fallback secret for local testing only. Production requires SECRET_KEY.' },
     { key: 'GEMINI_API_KEY',            required: false, default: '(none)',         description: 'Enables Gemini-powered AI copilot. Deterministic fallback without it.' },
     { key: 'GRIDSHIELD_USE_REAL_ML',    required: false, default: '1',             description: '"1" = XGBoost pipeline; "0" = deterministic mock predictor.' },
-    { key: 'DATABASE_URL',              required: false, default: 'sqlite+aiosqlite:///./gridmind.db', description: 'PostgreSQL URL for production. SQLite used by default.' },
+    { key: 'DATABASE_URL',              required: false, default: 'sqlite (dev)',  description: 'PostgreSQL URL for production. SQLite used by default in development.' },
     { key: 'CORS_ORIGINS',              required: false, default: 'http://localhost:5173', description: 'Comma-separated allowed origins for CORS.' },
     { key: 'ALGORITHM',                 required: false, default: 'HS256',         description: 'JWT signing algorithm.' },
     { key: 'ACCESS_TOKEN_EXPIRE_MINUTES', required: false, default: '30',          description: 'JWT access token TTL in minutes.' },
@@ -748,17 +749,10 @@ function EnvironmentTab() {
         </div>
       </Section>
 
-      <Section title="Demo Credentials">
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          {[
-            { label: 'Email',    value: 'demo@gridshield.ai' },
-            { label: 'Password', value: 'demo1234' },
-          ].map(item => (
-            <div key={item.label} style={{ padding: '12px 16px', background: '#f8f9fa', borderRadius: 10, border: '1px solid #e0e0e0' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: MUTED, marginBottom: 4 }}>{item.label}</div>
-              <div style={{ fontFamily: 'monospace', fontSize: 14, fontWeight: 700, color: '#202124' }}>{item.value}</div>
-            </div>
-          ))}
+      <Section title="Demo Access">
+        <div style={{ padding: '12px 16px', background: '#f8f9fa', borderRadius: 10, border: '1px solid #e0e0e0', fontSize: 13, color: MUTED }}>
+          A demo account is available for exploration. Use the <strong>Fill Demo</strong> button on the login screen to access it.
+          Demo credentials are configured via environment variables and are not stored in application code.
         </div>
       </Section>
     </div>

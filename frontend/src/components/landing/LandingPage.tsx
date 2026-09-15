@@ -587,7 +587,7 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
               </Button>
             </div>
             <p className="mt-5 text-xs text-blue-200/60">
-              Demo login: demo@gridshield.ai / demo1234
+              Demo access available — click &ldquo;Sign In&rdquo; for credentials.
             </p>
           </div>
         </div>
@@ -650,15 +650,15 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
               <div className="mb-5 rounded-xl border border-blue-600/15 bg-blue-50 px-4 py-3 text-xs text-blue-700">
                 <div className="mb-2 font-semibold">Quick Demo Access</div>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="font-mono text-blue-600/80" style={{ fontFamily: "ui-monospace, monospace" }}>
-                    demo@gridshield.ai / demo1234
+                  <span className="text-blue-600/80">
+                    Use the demo account to explore the application.
                   </span>
                   <button
                     type="button"
                     className="shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm hover:bg-blue-700"
                     onClick={() => setDemoFill(f => !f)}
                   >
-                    {demoFill ? "Clear" : "Auto-fill"}
+                    {demoFill ? "Clear" : "Fill Demo"}
                   </button>
                 </div>
               </div>
@@ -672,8 +672,8 @@ export function LandingPage({ onLogin, onSignup }: LandingPageProps) {
               onSignup={onSignup}
               inputCls={inputCls}
               inputEl={inputEl}
-              defaultEmail={demoFill ? "demo@gridshield.ai" : ""}
-              defaultPassword={demoFill ? "demo1234" : ""}
+              defaultEmail={demoFill ? import.meta.env.VITE_DEMO_EMAIL ?? "" : ""}
+              defaultPassword={demoFill ? import.meta.env.VITE_DEMO_PASSWORD ?? "" : ""}
             />
           </div>
         </div>
