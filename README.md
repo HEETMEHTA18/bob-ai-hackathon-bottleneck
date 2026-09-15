@@ -25,8 +25,8 @@ flowchart LR
 |-------|-------|
 | Team Name | `bottleneck` |
 | Track | U1 — Power Outage Prediction & Grid Equipment Failure Advisor |
-| Team Lead | Heet Mehta — heetmehta18125@gmail.com |
-| Team Members | Heet Mehta · Dhruvin Vaghasiya · Urval Kheni |
+| Team Lead | Urval Kheni — kheniurval777@gmail.com |
+| Team Members | Heet Mehta · Krish Patel · Dhruvin Vaghasiya · Urval Kheni |
 | Repository | https://github.com/HEETMEHTA18/bob-ai-hackathon-bottleneck |
 
 ---
